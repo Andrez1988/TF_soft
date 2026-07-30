@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronograma Gantt — Integraciones Migración SAP HANA · Farmacias Peruanas</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --red:#F02615; --red-dk:#8B0000; --red-md:#B32515;
+  --amber:#FAB701; --amber-dk:#8a6000;
+  --off:#F5F2EF; --white:#FFFFFF;
+  --ink:#1A1A1A; --ink-ti:#0F0F10;
+  --g1:#3D3E40; --g2:#7A7B7E; --g3:#E2DFDC; --g4:#F0EDEA;
+  --green:#1a7a38;
+  --f:'Plus Jakarta Sans',sans-serif;
+  --radius:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.03);
+  --day-w:34px;
+}
+html,body{background:var(--off);font-family:var(--f);color:var(--g1);}
+body{min-height:100vh;display:flex;flex-direction:column;}
+button{font-family:var(--f);cursor:pointer;}
+input,select{font-family:var(--f);}
+
+/* ── TOPBAR ── */
+#topbar{
+  background:var(--red); color:#fff;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.9rem 1.75rem; flex-wrap:wrap; gap:.75rem;
+}
+.tb-left{display:flex;align-items:center;gap:1rem;}
+.tb-logo{height:34px;width:auto;filter:drop-shadow(0 1px 3px rgba(0,0,0,.18));flex-shrink:0;}
+.tb-divider{width:1px;height:34px;background:rgba(255,255,255,.35);}
+.tb-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.92);font-weight:600;}
+.tb-title{font-size:clamp(1rem,1.7vw,1.4rem);font-weight:800;letter-spacing:-.01em;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.2);margin-top:.15rem;}
+.tb-right{display:flex;align-items:center;gap:1.5rem;}
+.tb-stat{display:flex;flex-direction:column;gap:.15rem;text-align:right;}
+.tb-stat-lbl{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.85);font-weight:600;}
+.tb-stat-val{font-size:13.5px;font-weight:700;color:#fff;}
+.btn-ghost-light{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:700;font-size:12px;}
+.btn-ghost-light:hover{background:rgba(255,255,255,.15);}
+.btn-logout{border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:100px;padding:.42rem .95rem;font-size:11.5px;font-weight:700;white-space:nowrap;}
+.btn-logout:hover{background:#fff;color:var(--red);}
+
+/* ── KPI ROW ── */
+#kpi-row{padding:1rem 1.75rem 0;}
+.kpi-grid{display:grid;gap:.85rem;background:transparent;}
+.kpi-grid.c5{grid-template-columns:repeat(5,1fr);}
+.kc{background:var(--white);padding:.95rem 1.1rem;border-radius:var(--radius);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:.25rem;}
+.kc-ey{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--g2);font-weight:700;}
+.kc-val{font-size:1.65rem;font-weight:800;color:var(--ink-ti);letter-spacing:-.02em;line-height:1;}
+.kc-lbl{font-size:9.5px;color:var(--g1);}
+.kc.amber{border-top:3px solid var(--amber);}
+.kc.amber .kc-val{color:var(--amber-dk);}
+
+/* ── TOOLBAR ── */
+#toolbar{
+  margin:1rem 1.75rem 0; padding:.7rem .9rem;
+  background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow);
+  display:flex; align-items:center; gap:.9rem; flex-wrap:wrap;
+}
+.tbar-group{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.tbar-actions{margin-left:auto;}
+#search{
+  width:280px; padding:.5rem .75rem; border:1px solid var(--g3); border-radius:5px;
+  font-size:12.5px; color:var(--ink-ti); background:var(--off);
+}
+#search:focus{outline:none;border-color:var(--red);background:#fff;}
+select{
+  padding:.48rem .6rem; border:1px solid var(--g3); border-radius:5px;
+  font-size:12px; color:var(--g1); background:#fff;
+}
+.chip{
+  padding:.36rem .7rem; border-radius:100px; font-size:11px; font-weight:600;
+  border:1.5px solid var(--g3); background:#fff; color:var(--g1); cursor:pointer;
+  display:inline-flex; align-items:center; gap:.35rem; transition:all .15s;
+}
+.chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.chip.active{border-color:transparent;color:#fff;}
+.zoom-ctrl{display:flex;align-items:center;gap:.4rem;border:1px solid var(--g3);border-radius:5px;padding:.2rem .5rem;}
+.zoom-ctrl button{width:22px;height:22px;border:none;background:var(--off);border-radius:4px;font-weight:700;color:var(--g1);font-size:13px;}
+.zoom-ctrl button:hover{background:var(--g3);}
+#zoom-lbl{font-size:10.5px;color:var(--g2);font-weight:700;min-width:34px;text-align:center;text-transform:uppercase;letter-spacing:.05em;}
+.btn{padding:.5rem .85rem;border-radius:5px;font-size:12px;font-weight:700;border:1.5px solid transparent;white-space:nowrap;}
+.btn-primary{background:var(--red);color:#fff;}
+.btn-primary:hover{background:var(--red-dk);}
+.btn-outline{background:#fff;border-color:var(--g3);color:var(--g1);}
+.btn-outline:hover{border-color:var(--red);color:var(--red-dk);}
+.btn-danger{background:#fff;border-color:var(--red);color:var(--red);}
+.btn-danger:hover{background:var(--red);color:#fff;}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none;}
+.file-status{font-size:10.5px;font-weight:700;color:var(--g2);background:var(--off);border:1px solid var(--g3);padding:.42rem .7rem;border-radius:100px;cursor:default;white-space:nowrap;}
+.file-status.ok{color:var(--green);background:#E1F3E6;border-color:transparent;}
+.file-status.warn{color:var(--amber-dk);background:#FFF3D6;border-color:transparent;cursor:pointer;}
+.file-status.warn:hover{filter:brightness(.96);}
+
+/* ── GANTT ── */
+#gantt-wrap{margin:1rem 1.75rem 1.75rem;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;flex:1;display:flex;}
+#gantt-scroll{overflow:auto;width:100%;max-height:calc(100vh - 260px);}
+#gantt-inner{position:relative;}
+
+.meta-cell{position:sticky;background:#fff;display:flex;align-items:center;padding:0 .5rem;font-size:11.5px;border-right:1px solid var(--g3);overflow:hidden;z-index:10;}
+.col-n{width:38px;left:0;justify-content:center;color:var(--g2);font-weight:700;}
+.col-act{width:300px;left:38px;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:.35rem .6rem;}
+.col-resp{width:128px;left:338px;gap:.4rem;}
+.col-fechas{width:132px;left:466px;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;padding:.35rem .6rem;}
+.col-corporativo{width:92px;left:598px;font-size:10.5px;color:var(--g1);}
+.col-microservicio{width:300px;left:690px;font-size:10.5px;color:var(--g1);}
+.col-avance{width:96px;left:990px;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;padding:.35rem .6rem;}
+.col-estado{width:118px;left:1086px;}
+.col-dependiente{width:160px;left:1204px;padding:0 .3rem;}
+.col-estado-prueba{width:118px;left:1364px;justify-content:center;}
+.col-owner-ku{width:160px;left:1482px;padding:0 .3rem;}
+.col-actions{width:64px;left:1642px;justify-content:center;gap:.3rem;border-right:2px solid var(--g3);}
+:root{--sticky-w:1706px;}
+
+#header-row{display:flex;position:sticky;top:0;z-index:30;background:var(--white);border-bottom:2px solid var(--g3);height:52px;}
+.hdr-meta{display:flex;height:52px;position:sticky;left:0;z-index:32;}
+.hdr-meta .meta-cell{height:52px;z-index:31;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--g2);font-weight:700;background:var(--off);justify-content:center;text-align:center;}
+.hdr-days{display:flex;flex-direction:column;}
+.hdr-months{display:flex;height:20px;}
+.hdr-months div{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--g1);display:flex;align-items:center;padding-left:6px;border-right:1px solid var(--g3);background:var(--off);white-space:nowrap;overflow:hidden;}
+.hdr-daynums{display:flex;height:32px;}
+.day-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;color:var(--g1);border-right:1px solid var(--g4);}
+.day-col .dow{font-size:7.5px;color:var(--g2);text-transform:uppercase;font-weight:700;}
+.day-col.weekend{background:#faf5f0;}
+.day-col.today{background:rgba(240,38,21,.08);}
+.day-col.today .dow, .day-col.today .num{color:var(--red-dk);font-weight:800;}
+
+#body-rows{position:relative;}
+.grp-row{display:flex;align-items:center;background:var(--off);border-bottom:1px solid var(--g3);border-top:1px solid var(--g3);height:38px;position:sticky;left:0;z-index:20;width:fit-content;min-width:100%;}
+.grp-row .grp-sticky{position:sticky;left:0;display:flex;align-items:center;gap:.5rem;width:var(--sticky-w);background:var(--off);height:38px;padding:0 .6rem;border-right:2px solid var(--g3);flex-shrink:0;}
+.grp-toggle{width:18px;height:18px;border:none;background:transparent;color:var(--red-dk);font-size:11px;display:flex;align-items:center;justify-content:center;transition:transform .18s;flex-shrink:0;}
+.grp-row.collapsed .grp-toggle{transform:rotate(-90deg);}
+.grp-title{font-weight:800;font-size:12px;color:var(--ink-ti);letter-spacing:-.01em;flex:1;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px dashed transparent;}
+.grp-title:hover{border-bottom-color:var(--g2);}
+.grp-count{font-size:9.5px;color:var(--g2);font-weight:700;background:#fff;border-radius:100px;padding:.15rem .5rem;flex-shrink:0;}
+.grp-del{width:20px;height:20px;border:none;background:transparent;color:var(--g2);font-size:12px;flex-shrink:0;border-radius:4px;}
+.grp-del:hover{background:#fde5e2;color:var(--red-dk);}
+.grp-bar{flex:1;height:38px;}
+
+.task-row{display:flex;align-items:stretch;border-bottom:1px solid var(--g4);height:44px;position:relative;}
+.task-row:hover .meta-cell{background:#fdf7f5;}
+.task-row:hover{background:#fdf7f5;}
+.cat-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;transform:rotate(45deg);}
+.act-title{font-size:11.5px;font-weight:700;color:var(--ink-ti);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;}
+.act-sub{font-size:9px;color:var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;}
+.resp-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0;}
+.resp-name{font-size:10.5px;color:var(--g1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.corp-text,.micro-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;}
+.dependiente-select,.owner-select{width:100%;border:1px solid transparent;background:transparent;font-size:10.5px;font-family:var(--f);color:var(--ink-ti);padding:.3rem .4rem;border-radius:4px;cursor:pointer;}
+.dependiente-select:hover,.owner-select:hover{border-color:var(--g3);background:#fff;}
+.dependiente-select:focus,.owner-select:focus{outline:none;border-color:var(--red);background:#fff;}
+.fechas-main{font-size:10.5px;color:var(--ink-ti);font-weight:600;}
+.fechas-sub{font-size:9px;color:var(--g2);}
+.avance-ring{flex-shrink:0;}
+.avance-ring .ring-bg{fill:none;stroke:var(--g3);stroke-width:3.6;}
+.avance-ring .ring-fg{fill:none;stroke-width:3.6;stroke-linecap:round;transition:stroke-dasharray .35s ease;}
+.avance-txt{font-size:10px;font-weight:700;color:var(--ink-ti);}
+.estado-badge{font-size:9px;font-weight:700;padding:.25rem .5rem;border-radius:100px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;}
+.row-actions{display:flex;gap:.25rem;opacity:0;transition:opacity .15s;}
+.task-row:hover .row-actions{opacity:1;}
+.icon-btn{width:22px;height:22px;border:none;background:var(--off);border-radius:4px;font-size:10.5px;display:flex;align-items:center;justify-content:center;color:var(--g1);}
+.icon-btn:hover{background:var(--g3);}
+.icon-btn.del:hover{background:#fde5e2;color:var(--red-dk);}
+
+.timeline-area{position:relative;flex-shrink:0;}
+.gridline{position:absolute;top:0;bottom:0;border-right:1px solid var(--g4);}
+.gridline.weekend{background:#faf5f0;}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--red);z-index:5;}
+.today-line::before{content:'HOY';position:absolute;top:-2px;left:4px;font-size:7.5px;font-weight:800;color:var(--red);letter-spacing:.05em;}
+.gantt-bar{position:absolute;top:9px;height:26px;border-radius:5px;cursor:pointer;display:flex;align-items:center;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.15);transition:filter .12s, transform .12s;}
+.gantt-bar:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.gantt-bar .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.35);}
+.gantt-bar .lbl{position:relative;z-index:1;font-size:9.5px;font-weight:700;color:#fff;padding:0 8px;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.35);pointer-events:none;}
+.gantt-bar.no-date{background:repeating-linear-gradient(45deg, var(--g3), var(--g3) 6px, var(--g4) 6px, var(--g4) 12px);}
+
+.bar-tooltip{
+  position:fixed;z-index:1000;background:var(--ink);color:#fff;padding:.65rem .8rem;border-radius:6px;
+  font-size:11px;line-height:1.5;max-width:280px;box-shadow:0 6px 20px rgba(0,0,0,.25);pointer-events:none;
+  opacity:0;transition:opacity .12s;
+}
+.bar-tooltip.show{opacity:1;}
+.bar-tooltip b{color:var(--amber);font-size:11.5px;}
+.bar-tooltip .tt-row{color:rgba(255,255,255,.75);font-size:10px;margin-top:2px;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,15,16,.55);display:none;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:8px;width:640px;max-width:92vw;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--g3);}
+.modal-head h3{font-size:1.05rem;font-weight:800;color:var(--ink-ti);}
+.modal-close{width:28px;height:28px;border:none;background:var(--off);border-radius:50%;font-size:16px;color:var(--g1);}
+.modal-close:hover{background:var(--g3);}
+.modal-body{padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.9rem;}
+.form-row{display:flex;gap:.8rem;flex-wrap:wrap;}
+.form-row label{display:flex;flex-direction:column;gap:.3rem;font-size:10.5px;font-weight:700;color:var(--g2);text-transform:uppercase;letter-spacing:.04em;flex:1;min-width:140px;}
+.form-row label.grow{flex:1 1 100%;}
+.form-row input, .form-row select{
+  font-size:12.5px;color:var(--ink-ti);font-weight:500;text-transform:none;letter-spacing:0;
+  padding:.55rem .65rem;border:1px solid var(--g3);border-radius:5px;background:var(--off);
+}
+.form-row input:focus, .form-row select:focus{outline:none;border-color:var(--red);background:#fff;}
+.form-row input[type="range"]{padding:0;background:transparent;}
+.modal-foot{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.4rem;border-top:1px solid var(--g3);}
+.modal-foot-right{display:flex;gap:.6rem;}
+
+#toast{
+  position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:.6rem 1.1rem;border-radius:100px;font-size:11.5px;font-weight:600;
+  opacity:0;transition:all .25s;z-index:900;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+#page-footer{
+  display:flex;justify-content:space-between;padding:.85rem 1.75rem 1.1rem;
+  font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--g2);
+}
+
+@media print{
+  #toolbar,.tbar-actions,.row-actions,#page-footer,.grp-del{display:none!important;}
+}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;z-index:900;display:flex;background:#fff;}
+#login-screen.hidden{display:none;}
+.login-left{flex:1 1 50%;background:var(--red);color:#fff;display:flex;flex-direction:column;padding:1.6rem 1.9rem;}
+.login-logo{height:38px;width:auto;align-self:flex-start;filter:drop-shadow(0 1px 3px rgba(0,0,0,.18));flex-shrink:0;}
+.login-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1rem;padding:2rem;}
+.login-hello{font-size:13.5px;font-weight:700;}
+.login-brand{font-size:clamp(2.2rem,4.5vw,3.6rem);font-weight:300;letter-spacing:.2em;margin-left:.2em;line-height:1.1;}
+.login-sub{font-size:12px;color:rgba(255,255,255,.92);}
+.login-right{flex:1 1 50%;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff;}
+.login-box{width:min(360px,100%);display:flex;flex-direction:column;}
+.login-title{color:var(--red);font-size:1.65rem;font-weight:600;text-align:center;letter-spacing:-.01em;}
+.login-help{font-size:11.5px;color:var(--g2);text-align:center;margin:.9rem 0 2rem;line-height:1.6;}
+.login-field{margin-bottom:1.3rem;}
+.login-field label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--g1);font-weight:600;margin-bottom:.45rem;}
+.login-field input{width:100%;border:none;background:#E8F0FE;padding:.85rem .9rem;font-size:13px;color:var(--ink-ti);border-radius:3px;}
+.login-field input:focus{outline:2px solid var(--red);outline-offset:-2px;background:#fff;}
+.login-terms{font-size:11px;color:var(--g1);margin:.2rem 0 1.8rem;}
+.login-error{display:none;background:#fde5e2;color:var(--red-dk);font-size:12px;font-weight:600;padding:.6rem .8rem;border-radius:5px;margin-bottom:1.1rem;text-align:center;}
+.login-error.show{display:block;}
+.login-btn{background:var(--red);color:#fff;border:none;border-radius:100px;padding:.85rem 1rem;font-size:14px;font-weight:700;}
+.login-btn:hover{background:var(--red-dk);}
+.login-btn:disabled{opacity:.6;cursor:wait;}
+@media (max-width:760px){ .login-left{display:none;} }
+
+#conn-error{position:fixed;inset:0;background:rgba(15,15,16,.72);z-index:800;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+#conn-error.show{display:flex;}
+.conn-box{background:#fff;padding:2rem 2.2rem;border-radius:10px;max-width:480px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.conn-box h3{font-size:1.15rem;font-weight:800;color:var(--ink-ti);margin-bottom:.7rem;}
+.conn-box p{font-size:12.5px;color:var(--g1);line-height:1.6;margin-bottom:1.1rem;}
+.conn-box code{background:var(--off);padding:.15rem .4rem;border-radius:4px;font-size:11.5px;color:var(--red-dk);}
+
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <symbol id="fp-logo-w" viewBox="0 0 3268.34 1016.49"><path fill="#fff" d="M728.27,615.22c-1.35,1.35-3.42,2.78-4.62,2.84-1.46.07-3.96-1.3-5.16-2.5l-25.04-25.07c-.93-.93-2.11-2.44-2.39-3.39-.34-1.14.91-3.63,1.9-4.62l27.47-27.46,5.62.02,27.92,27.92.03,6.55-25.73,25.71Z"/><path fill="#fff" d="M1469.64,719.76c-15.84,8.64-32.33,12.45-49.95,12.61l-47.44.44-.47,75.89c-.08,13.1-14.82,21.34-26.91,19.58-9.12-1.33-20.44-8.18-20.44-18.65l-.2-231.64c2.44-8.52,9.54-17.46,19.33-17.74,26.82-.76,53.36-.77,80.17.01,12.93.38,25.04,3.99,36.62,8.34,32.51,14.4,46.11,42.47,46.06,77.15-.04,30.5-8.04,58.35-36.76,74.01ZM1447.97,615.91c-7.97-6.07-17.75-9.57-28.21-9.68l-47.53-.48v81.05s51.6-.36,51.6-.36c8.79-.06,17.25-3.95,23.85-9.17,16.35-12.94,15.39-48.53.3-61.37Z"/><path fill="#fff" d="M1692.92,760.88c8.83-9.89,23.67-6.44,31.67,2.49,12.86,14.37-.2,32.98-11.71,43.16-23.96,21.19-58.57,33.03-90.71,29.48-55.68-5.47-100.22-52.1-96.91-109.29.68-11.75,2.83-22.92,7.33-33.62,9.52-22.62,25.81-40.9,47.44-52.37,12.78-6.78,25.86-11.43,40.46-12.52,9.04-.67,18.28-.92,27.36.11,25.92,2.96,49.51,14.66,66.31,34.41,12.45,14.63,21.25,31.17,24.87,50.09,2.1,10.98-6.24,22.67-18.36,22.69l-148.61.31c1.76,29.99,27.73,53.29,56.97,54.94,30.68,1.74,44.46-8.11,63.89-29.88ZM1689,704.79c-9.05-21.43-26.34-34.63-48.61-37.38-26.98-3.34-51.65,12.41-62.12,37.39h110.74Z"/><path fill="#fff" d="M2285.8,814.15c-21.88,17.33-46.71,24.64-74.58,21.93-22.92-2.23-44.57-10.03-62.05-25.3-26.39-23.05-37.61-57.24-33.58-92.04,4.2-36.3,28.47-66.23,61.05-81.38,30.62-14.24,69.93-13.13,99.99,3.39,29.85,16.41,52.2,47.07,53.99,82.13,1.5,29.45.66,58.21.13,87.61-.19,10.36-12.25,17.07-20.22,17.96-10.67,1.19-19.85-3.91-24.72-14.3ZM2270.72,769.39c18.62-22.26,18.2-53.51-1.03-75.31-13.21-14.98-33.01-23.22-53.04-20.88-25.4,2.96-46.4,20.21-53.08,44.75-5.21,19.11.45,38.2,13.82,52.82,25.15,27.51,69.73,26.84,93.33-1.38Z"/><path fill="#fff" d="M2096.33,660.8l-.62,94.54c-.13,19.34-9.29,36.12-21.5,50.43-32.19,37.7-91.95,41.46-129.6,7.39-15.4-13.93-27.93-33.83-28.76-55.56-1.31-34.52-.77-68.21-.18-102.76.23-13.42,16.01-20.36,27.37-18.18,10.97,2.11,18.82,10.26,18.94,21.27l1.01,95.65c.28,26.5,30.72,42.09,54.65,34.93,17.01-5.09,30.96-18.77,31.14-36.98l.95-96.69c.14-13.86,16.15-20.61,28.38-18.03,11.58,2.44,18.3,12.29,18.22,23.99Z"/><path fill="#fff" d="M1808.83,809.36c-.11,12.21-13.36,19.74-23.96,19.2-10.92-.56-22.41-8.59-22.41-21.01l.04-150.57c0-14.87,15.62-22.98,28.55-20.17,11.32,2.46,17.87,11.06,18.59,22.6,17.42-18.4,43.49-29.36,67.37-31.71,9.52-.94,18.06,1.48,23.63,8.19s7.42,16.73,3.87,25.07c-4.9,11.5-15.75,14.57-27.4,15.07-27.2,1.15-51.45,18.07-63.06,42.36-2.66,5.57-4.53,12.34-4.58,18.35l-.63,72.64Z"/><path fill="#fff" d="M2481.22,685.6c-17.72-16.81-47.6-16.33-64.34,2.92-5.64,6.49-9.15,14.63-9.25,23.84l-1.11,99.13c-.12,10.75-13.72,17.15-22.84,17.12-9.33-.03-23.03-6.83-23.03-18.08l-.02-155.64c0-14.1,16.89-20.33,28.34-18.25,8.49,1.54,13.47,6.24,17.23,13.78,10.54-15.9,27.53-22.71,46.06-22.9,21.98-.22,43.26,5.87,59.69,20.39,17.04,15.07,26.77,34.35,29.16,57.28l-.07,103.45c0,10.93-10.53,18.29-20.4,19.64-8.26,1.12-16.54-1.53-22.15-7.96-1.88-2.16-5.04-7.51-5.06-10.73l-.54-99.47c-.05-9.36-5.23-18.4-11.67-24.51Z"/><path fill="#fff" d="M2738.44,814.43c-21.93,17.33-45.98,23.99-73.28,21.7-59.47-4.98-99.71-49.8-97.06-109.43,2.34-52.61,45.41-94.02,96.15-98.58,32.03-2.88,62.52,5.58,86.21,27.46,18.15,16.77,31.57,39.16,33.05,64.54,1.76,30.26.47,60.01.43,90.36-.01,7.71-8.03,13.56-13.03,15.86-12.68,5.83-23.78,1.04-32.47-11.91ZM2672.7,790.89c32.65,1.83,60.43-20.15,64.42-52.22,4.39-35.32-26.16-66.64-62.37-65.8-29.96.69-56.25,23.26-59.45,53.67-3.54,33.63,24.5,62.5,57.4,64.35Z"/><path fill="#fff" d="M2941.49,800.1c-13.71,27.57-50.14,40.15-78.51,35.99-20.2-2.96-38.3-12.47-51.28-27.67-8.21-9.62-12.25-21.86-9.89-33.93,1.85-9.45,9.03-14.9,18.47-14.87,27,.09,18.15,33.84,50.25,35.64,9.83.55,20.34-4.06,25.95-13.15,5.46-8.82,1.85-19.88-7.09-24.42-20.16-10.24-40.81-9.5-64.57-25.34-17.7-11.79-25.13-29.9-22.87-50.65,1.36-12.54,7.25-23.39,15.85-32.48,15.17-16.03,36.34-22.47,58.49-21.64,39.08,1.46,66.93,35.79,54.44,53.73-5.45,7.83-17.27,10.03-25.44,5.49-3.91-2.17-7.4-5.53-10.27-8.88-11.17-13.02-30.93-15.14-43.37-2.86-2.96,2.92-3.75,7.93-3.39,11.95,2.26,24.96,92.3,12.32,98.64,81.14,1,10.88-.42,21.92-5.4,31.94Z"/><path fill="#fff" d="M305.23,112.75l.05,1.49c.02.66,10.52.54,14.8.95,51.18,4.87,97.59,26.95,135.76,61.02l59.08,52.75,8.44,7.65,9.97,9.04,11,10,12.52,11.44,10.47,9.57,12.52,11.45,12.01,10.98,10.47,9.57,12.52,11.44,10.48,9.57c4.41,4.03,8.85,7.98,13.52,11.72l10-9.06,11-9.97,10.99-10.01,12.52-11.47,11.48-10.54,12.5-11.48,13.03-11.96,10.44-9.56,13.12-11.98,55.22-49.53,30.62-26.57c33.35-28.94,73.43-48.3,117.37-54.55.54-.08,2.1-.1,2.49-.13.59-.05.54-1.05.61-1.83h61l.04,1.48c.01.37,1.31.18,2.11.3,54.34,8.18,101.12,33.37,137.3,74.7,40.9,46.71,60.26,112.91,56.07,174.25-3.62,52.91-29.81,102.98-67.01,139.63l-5.18,5.1-25.8,25.08-16.59,15.48-13.46,12.53-12.53,11.49-11.48,10.51-11.52,10.49-11,10.01-11.49,10.49-11.52,10.51-12.99,12-14.04,12.98-18.02,17.07c-18.32,17.35-37.74,24.11-58.92,5.99-5.29-4.53-9.9-9.39-14.5-14.55l-25.92-29.06-9.56-10.48-10.02-11-11.98-12.99-12.01-13.01-14-14.99-15-16-16-17-17-17.99-16-17.01-16-16.99-15-16-14-14.99-12-13-11.01-12-10.98-12-9.48-10.54-14.59-15.06-9.87,10.7-9.61,10.46-13.49,14.46-20.1,21.13-98.78,99.81-46.06,46.98-19.02,20.05-12.51,13.46-8.61,9.46-9.01,10-8.03,9c-7.29,8.16-14.6,16.12-23.67,22.33-16.17,11.07-33.5-3.95-46.14-15.21l-37.03-32.96-10.26-8.96-73.05-62.69-9.6-8.54-10-8.99-9.98-9.06-15.07-13.83c-39.79-36.51-67.26-86.09-75.08-139.87-.08-.57-.12-2.11-.15-2.5-.05-.59-1.02-.54-1.82-.62v-66c1.48.1,2.44-1.27,2.78-3.29,7.36-44.03,27.74-84.24,57.8-117.03,38.78-43.35,95.25-69.58,153.29-71.9l3.07-.12c.39-.02.05-1.56.05-1.65h15ZM940.42,606.54l11.29-10.36,66.45-60.29,11.02-10.14,14.56-13.46,21.97-21.01c8.43-8.06,16.48-16.07,24.49-24.49l18.59-19.55c29.18-30.69,43.53-75.3,39.67-117.62-7.79-85.4-74.85-152.25-160.15-159.06-32.87-2.62-67.28,5.85-94.01,25.51-32.23,23.7-62.01,49.36-91.6,76.11l-12.09,10.94-12.01,10.98-10.46,9.58-13.53,12.44-11.99,11-12.01,10.99-10.5,9.53-10.02,8.98-9.24,8.13,226.81,253.64,12.76-11.85Z"/><path fill="#fff" d="M3158.23,437.75v37c-.53,0-1.85,1.03-2.15,1.79-5.63,14.26-15.98,25.34-29.78,32.37-14.86,7.58-31.93,11.25-48.81,9.38-25.53-2.82-57.77-20.63-63.36-47.55-1.78-8.58-1.28-18.35,5.55-24.66,5.49-5.07,15.32-5.95,22.01-2.8s10.61,9.21,13.62,15.23c6.51,12.97,18.34,20,33.16,18.32,8.66-.98,17.3-6.58,20.98-14.59,4.54-9.87-.19-19.2-9.47-23.38-23.82-10.73-55.01-12.43-73.75-33.93-11.13-12.77-13.42-25.45-11.8-42.17,1.4-14.48,9.44-26.29,20.12-35.82,16.54-14.77,36.89-18.54,58.67-16.94,20.99,1.54,49.09,17.88,52.08,40.47,1.16,8.78-2.25,16.12-10.54,18.96-5.68,1.95-13.62,2.64-18.6-1.63-2.9-2.49-6.51-5.16-9.01-7.99-11.53-13.04-31.57-15.32-43.86-2.11-2.9,3.11-3.79,8.86-2.64,12.85.89,3.08,4.1,7.07,7.98,8.89,19.39,9.07,35.36,9.5,59.31,22.66,6.92,3.81,12.66,9.04,18.08,14.97,4.74,5.18,7.86,12.02,10.23,18.66l.66,1.84c.12.34,1.02.19,1.34.18Z"/><path fill="#fff" d="M2086.9,491.28c-.1,10.21-9.82,17.06-18.45,18.6-7.96,1.42-15.24-.21-20.96-4.74-5.88-4.65-8.2-11.49-8.26-19.47l-.74-93.71c-.18-23.13-24.09-38.36-46.47-36.09-18.17,1.84-36.93,16.9-37.11,35.95l-.92,95.82c-.14,14.6-13.38,24.4-27.26,22.6-9.76-1.27-20.33-8.64-20.33-19.64v-152.69c0-11.34,11.07-18.68,21.16-19.78,11.73-1.29,18.05,3.84,24.97,13.5,9.2-12.11,21.96-19.46,36.65-21.95,6.09.13,12.04-.23,18.1.3,20.8,1.81,39.06,12.44,54.31,27.48,24.64-22.25,45.17-29.28,78.76-27.78,21.41,3.13,41.87,12.17,56.37,28.54,12.98,14.65,22.94,32.88,23.01,52.87l.32,97.49c.04,11.06-8.62,19.32-18.75,21.38-13.47,2.73-28.72-5.42-28.79-20.24l-.47-96.87c-.02-4.3-2.23-10.03-4.23-13.72-6.69-12.32-18.42-21.16-32.85-23.11-22.66-3.06-46.85,14.33-47.09,38.12l-.97,97.17Z"/><path fill="#fff" d="M1677.42,496.23c-22.34,16.94-43.86,23.56-71.14,21.92-17.93-1.08-34.42-5.44-50.16-14.47-29.01-16.65-46.71-46.94-49.52-80.36-2.72-32.39,9.24-63.96,33.62-85.56,24.86-22.02,54.75-31.25,87.97-27.65,26.1,2.82,50.52,15.22,67.94,34.55,16.29,18.08,26.54,40.04,26.69,64.37l.45,76.64c.05,8.52-3.09,15.11-9.05,19.77-6.13,4.8-13.87,5.95-21.91,4.08-6.58-1.53-11.12-6.31-14.9-13.3ZM1594.94,469.58c20.74,7.12,43.75,2.81,59.9-11.03,12.16-10.42,19.67-24.08,20.99-40.13,2-24.26-12.88-46.53-33.34-56.95-22.78-11.6-48.85-8-68.25,8.37-12.58,10.61-20.68,26.07-20.92,42.87-.36,26.22,16.59,48.28,41.6,56.88Z"/><path fill="#fff" d="M2415.97,496.18c-22.88,16.6-43.5,23.85-71.72,21.98-25.08-1.67-48.74-10.11-67.21-27.2-34.74-32.15-42.52-87.52-19.08-127.68,17.28-29.63,47.88-49.67,82.32-53.16,20.59-2.09,39.13.35,58.1,8.7,34.41,15.14,59.94,47.75,62.18,86.3,1.68,28.91.51,57.42.28,86.26-.09,11.39-14.63,20.84-26,18.99-8.37-1.03-14.8-4.77-18.87-14.19ZM2400.11,451.92c22.05-25.89,17.71-62.18-7.96-83.06s-63.4-18.18-85.78,7.21c-8.54,9.69-14.11,21.52-14.74,35.1-.77,16.78,6.49,33.76,18.98,45,27.51,24.75,67.97,21.04,89.5-4.24Z"/><path fill="#fff" d="M2950.76,496.36c-21.87,17.02-44.61,23.75-72.5,21.72-59.34-4.32-100.23-48.84-98.14-108.39,1.85-52.71,44.21-94.1,95.17-99.57,8.88-.95,17.92-.78,26.64.08,48.07,4.77,88.56,43.24,94.25,91.72l.05,91.53c-4.93,14.69-19.65,20.43-33.94,14.97-4.26-2.78-7.44-6.29-11.53-12.06ZM2885.58,472.82c17.24.75,32.36-4.55,44.33-15.2,26.5-23.59,26.36-63.94-.58-87.2-9.36-8.08-20.8-13.55-33.58-15.19-36.95-4.74-71.82,26.48-68.54,62.76,2.69,29.83,27.7,53.49,58.37,54.83Z"/><path fill="#fff" d="M1473.86,375.67c6.12,6.03,8.13,14.85,4.99,22.79-3.32,8.39-10.98,16.02-21,16.05l-96.64.24.04,76.99c-3.14,11.25-12.07,18.49-24,18.65-8.34.12-23.56-6.62-23.59-17.94l-.49-232.38c2.62-9.85,9.55-15.9,19.43-18.33l150.57.07c14.49,0,23.55,13.49,22.1,26.98-1.16,10.8-9.12,16.76-19.79,19.93l-124.26.03v78.98s99.39.02,99.39.02c5.49,1.84,9.44,3.66,13.24,7.91Z"/><path fill="#fff" d="M2546.97,457.1c24.84,22.29,64.94,18.45,79.29,4.68l16.86-16.2c9.61-9.23,25.16-5.16,32.34,6.15,5.41,8.52,3.16,19.26-3.01,27.31-22.37,29.16-58.05,41.94-94.23,39.01-51.59-4.17-95.08-44.79-98.11-97.18-1.87-32.35,9.88-61.9,33.92-83.49,16.94-15.22,38.15-25.17,61.33-27.26,29.58-2.67,58.75,3.45,81.94,22.58,5.14,4.24,9.55,9.08,13.9,13.99,8.58,9.7,8.54,24.5-1.15,32.48-10.78,8.88-23.17,6.37-32.8-2.5l-8.8-8.11c-8.42-7.76-18.79-11.53-29.92-13.21-34.25-5.17-68.11,18.74-71.31,53.24-1.77,19.07,5.77,35.96,19.75,48.5Z"/><path fill="#fff" d="M1797.94,491.29c-.11,10.91-10.68,17.84-20.11,18.93-15.96,1.84-26.77-10.17-26.74-25.54l.22-143.85c.02-14.29,12.82-24.2,26.27-22.6,12.32,1.47,20.88,10.62,21.11,23.13,14.68-14.76,28.24-21.51,46.59-27.61,8.99-2.99,17.4-4.4,27.1-4.17,14.68.33,25.06,13.48,22.68,28.2-2.3,14.27-15.35,20.08-29,20.28-32.67.46-67.11,31.22-67.4,60.04l-.72,73.2Z"/><path fill="#fff" d="M2751,491.18c0,10.98-10.21,17.29-19.74,18.99-10.17,1.81-26.57-4.97-26.57-17.49v-156.88c0-12.53,16.38-19.29,26.6-17.49,9.43,1.66,19.69,8.13,19.69,18.59l.02,154.28Z"/><path fill="#fff" d="M2757.36,256.28c-1.16,16.91-15.37,26.39-31.26,25.81-16.88-.62-29.54-14.79-27.41-31.79,1.78-14.26,13.23-24.85,27.43-24.83,9.12.01,16.82,1.56,23.08,7.81,5.79,5.77,8.8,13.57,8.15,23Z"/><path fill="#fff" d="M631.72,579.77c-7.39,5.1-18.1,6.58-24.6.08l-40.94-40.96c-5.72-5.72-4.81-15.23-1.74-21.87l44.01-44.02c6.75-3.68,14.77-3.68,21.54,0l42.87,42.92c4.64,7.73,5.06,17.4-1.55,24.05l-39.6,39.8ZM619.23,492.25l-34.5,34.5,34.5,34.5,34.5-34.5-34.5-34.5Z"/><path fill="#fff" d="M663.23,903.75h-9c-.2-.76-1.03-2.54-1.72-3.23l-42.03-42.02c-1.41-1.41-1.37-5.06.05-6.49l42.16-42.35c1.67-1.68,6.39-4.47,8.25-2.61l46.02,45.88v5.65s-41.47,41.37-41.47,41.37c-1.11,1.1-1.96,2.69-2.26,3.8Z"/><rect fill="#fff" x="413.85" y="647.08" width="123.74" height="122.33" transform="translate(-361.47 543.83) rotate(-45)"/><path fill="#fff" d="M793.06,808.28c-1.88,1.84-8.24,2.42-9.99.74-4.38-4.21-8.72-9.01-12.87-13.3l-30.99-31.97-31.1-31.84c-3.43-3.51-4.34-8.46-.66-11.97l12.84-12.24,31.93-30.96,32.33-31.63c2.46-2.41,8.2-2.44,10.34-.23l16.39,16.92,31.94,32.92,26.28,26.73c3.65,3.71,3.87,8.95.04,12.62l-15.36,14.71-31.92,30.95-29.19,28.55Z"/><path fill="#fff" d="M621.77,790.75c-2.68,2.68-5.34,2.74-7.81.26l-23.52-23.52c-1.04-1.02-2.46-3.06-2.46-4.24s1.43-3.22,2.44-4.23l23.09-23.08h5.44s26.1,26.1,26.1,26.1v5.42s-23.28,23.29-23.28,23.29Z"/><path fill="#fff" d="M645.11,704.19c-6.42,6.39-17.63,5.22-23.57-.7l-30.99-30.92c-4.29-6.74-4.79-14.42-.57-21.1l34.03-34.03c6.61-4.07,15.94-4.13,21.88,1.78l29.95,29.8c6.4,6.37,5.33,19.23,1.62,22.93l-32.36,32.23ZM633.73,637.75l-23.5,23.5,24,24,23.5-23.5-24-24Z"/></symbol>
+    <symbol id="fp-logo-c" viewBox="0 0 3268.34 1016.49"><path fill="#db291c" d="M728.27,627.78c-1.35,1.35-3.42,2.78-4.62,2.84-1.46.07-3.96-1.3-5.16-2.5l-25.04-25.07c-.93-.93-2.11-2.44-2.39-3.39-.34-1.14.91-3.63,1.9-4.62l27.47-27.46,5.62.02,27.92,27.92.03,6.55-25.73,25.71Z"/><path fill="#db291c" d="M1469.64,732.32c-15.84,8.64-32.33,12.45-49.95,12.61l-47.44.44-.47,75.89c-.08,13.1-14.82,21.34-26.91,19.58-9.12-1.33-20.44-8.18-20.44-18.65l-.2-231.64c2.44-8.52,9.54-17.46,19.33-17.74,26.82-.76,53.36-.77,80.17.01,12.93.38,25.04,3.99,36.62,8.34,32.51,14.4,46.11,42.47,46.06,77.15-.04,30.5-8.04,58.35-36.76,74.01ZM1447.97,628.47c-7.97-6.07-17.75-9.57-28.21-9.68l-47.53-.48v81.05s51.6-.36,51.6-.36c8.79-.06,17.25-3.95,23.85-9.17,16.35-12.94,15.39-48.53.3-61.37Z"/><path fill="#db291c" d="M1692.92,773.44c8.83-9.89,23.67-6.44,31.67,2.49,12.86,14.37-.2,32.98-11.71,43.16-23.96,21.19-58.57,33.03-90.71,29.48-55.68-5.47-100.22-52.1-96.91-109.29.68-11.75,2.83-22.92,7.33-33.62,9.52-22.62,25.81-40.9,47.44-52.37,12.78-6.78,25.86-11.43,40.46-12.52,9.04-.67,18.28-.92,27.36.11,25.92,2.96,49.51,14.66,66.31,34.41,12.45,14.63,21.25,31.17,24.87,50.09,2.1,10.98-6.24,22.67-18.36,22.69l-148.61.31c1.76,29.99,27.73,53.29,56.97,54.94,30.68,1.74,44.46-8.11,63.89-29.88ZM1689,717.35c-9.05-21.43-26.34-34.63-48.61-37.38-26.98-3.34-51.65,12.41-62.12,37.39h110.74Z"/><path fill="#db291c" d="M2285.8,826.7c-21.88,17.33-46.71,24.64-74.58,21.93-22.92-2.23-44.57-10.03-62.05-25.3-26.39-23.05-37.61-57.24-33.58-92.04,4.2-36.3,28.47-66.23,61.05-81.38,30.62-14.24,69.93-13.13,99.99,3.39,29.85,16.41,52.2,47.07,53.99,82.13,1.5,29.45.66,58.21.13,87.61-.19,10.36-12.25,17.07-20.22,17.96-10.67,1.19-19.85-3.91-24.72-14.3ZM2270.72,781.95c18.62-22.26,18.2-53.51-1.03-75.31-13.21-14.98-33.01-23.22-53.04-20.88-25.4,2.96-46.4,20.21-53.08,44.75-5.21,19.11.45,38.2,13.82,52.82,25.15,27.51,69.73,26.84,93.33-1.38Z"/><path fill="#db291c" d="M2096.33,673.36l-.62,94.54c-.13,19.34-9.29,36.12-21.5,50.43-32.19,37.7-91.95,41.46-129.6,7.39-15.4-13.93-27.93-33.83-28.76-55.56-1.31-34.52-.77-68.21-.18-102.76.23-13.42,16.01-20.36,27.37-18.18,10.97,2.11,18.82,10.26,18.94,21.27l1.01,95.65c.28,26.5,30.72,42.09,54.65,34.93,17.01-5.09,30.96-18.77,31.14-36.98l.95-96.69c.14-13.86,16.15-20.61,28.38-18.03,11.58,2.44,18.3,12.29,18.22,23.99Z"/><path fill="#db291c" d="M1808.83,821.92c-.11,12.21-13.36,19.74-23.96,19.2-10.92-.56-22.41-8.59-22.41-21.01l.04-150.57c0-14.87,15.62-22.98,28.55-20.17,11.32,2.46,17.87,11.06,18.59,22.6,17.42-18.4,43.49-29.36,67.37-31.71,9.52-.94,18.06,1.48,23.63,8.19s7.42,16.73,3.87,25.07c-4.9,11.5-15.75,14.57-27.4,15.07-27.2,1.15-51.45,18.07-63.06,42.36-2.66,5.57-4.53,12.34-4.58,18.35l-.63,72.64Z"/><path fill="#db291c" d="M2481.22,698.16c-17.72-16.81-47.6-16.33-64.34,2.92-5.64,6.49-9.15,14.63-9.25,23.84l-1.11,99.13c-.12,10.75-13.72,17.15-22.84,17.12-9.33-.03-23.03-6.83-23.03-18.08l-.02-155.64c0-14.1,16.89-20.33,28.34-18.25,8.49,1.54,13.47,6.24,17.23,13.78,10.54-15.9,27.53-22.71,46.06-22.9,21.98-.22,43.26,5.87,59.69,20.39,17.04,15.07,26.77,34.35,29.16,57.28l-.07,103.45c0,10.93-10.53,18.29-20.4,19.64-8.26,1.12-16.54-1.53-22.15-7.96-1.88-2.16-5.04-7.51-5.06-10.73l-.54-99.47c-.05-9.36-5.23-18.4-11.67-24.51Z"/><path fill="#db291c" d="M2738.44,826.99c-21.93,17.33-45.98,23.99-73.28,21.7-59.47-4.98-99.71-49.8-97.06-109.43,2.34-52.61,45.41-94.02,96.15-98.58,32.03-2.88,62.52,5.58,86.21,27.46,18.15,16.77,31.57,39.16,33.05,64.54,1.76,30.26.47,60.01.43,90.36-.01,7.71-8.03,13.56-13.03,15.86-12.68,5.83-23.78,1.04-32.47-11.91ZM2672.7,803.45c32.65,1.83,60.43-20.15,64.42-52.22,4.39-35.32-26.16-66.64-62.37-65.8-29.96.69-56.25,23.26-59.45,53.67-3.54,33.63,24.5,62.5,57.4,64.35Z"/><path fill="#db291c" d="M2941.49,812.66c-13.71,27.57-50.14,40.15-78.51,35.99-20.2-2.96-38.3-12.47-51.28-27.67-8.21-9.62-12.25-21.86-9.89-33.93,1.85-9.45,9.03-14.9,18.47-14.87,27,.09,18.15,33.84,50.25,35.64,9.83.55,20.34-4.06,25.95-13.15,5.46-8.82,1.85-19.88-7.09-24.42-20.16-10.24-40.81-9.5-64.57-25.34-17.7-11.79-25.13-29.9-22.87-50.65,1.36-12.54,7.25-23.39,15.85-32.48,15.17-16.03,36.34-22.47,58.49-21.64,39.08,1.46,66.93,35.79,54.44,53.73-5.45,7.83-17.27,10.03-25.44,5.49-3.91-2.17-7.4-5.53-10.27-8.88-11.17-13.02-30.93-15.14-43.37-2.86-2.96,2.92-3.75,7.93-3.39,11.95,2.26,24.96,92.3,12.32,98.64,81.14,1,10.88-.42,21.92-5.4,31.94Z"/><path fill="#db291c" d="M305.23,125.3l.05,1.49c.02.66,10.52.54,14.8.95,51.18,4.87,97.59,26.95,135.76,61.02l59.08,52.75,8.44,7.65,9.97,9.04,11,10,12.52,11.44,10.47,9.57,12.52,11.45,12.01,10.98,10.47,9.57,12.52,11.44,10.48,9.57c4.41,4.03,8.85,7.98,13.52,11.72l10-9.06,11-9.97,10.99-10.01,12.52-11.47,11.48-10.54,12.5-11.48,13.03-11.96,10.44-9.56,13.12-11.98,55.22-49.53,30.62-26.57c33.35-28.94,73.43-48.3,117.37-54.55.54-.08,2.1-.1,2.49-.13.59-.05.54-1.05.61-1.83h61l.04,1.48c.01.37,1.31.18,2.11.3,54.34,8.18,101.12,33.37,137.3,74.7,40.9,46.71,60.26,112.91,56.07,174.25-3.62,52.91-29.81,102.98-67.01,139.63l-5.18,5.1-25.8,25.08-16.59,15.48-13.46,12.53-12.53,11.49-11.48,10.51-11.52,10.49-11,10.01-11.49,10.49-11.52,10.51-12.99,12-14.04,12.98-18.02,17.07c-18.32,17.35-37.74,24.11-58.92,5.99-5.29-4.53-9.9-9.39-14.5-14.55l-25.92-29.06-9.56-10.48-10.02-11-11.98-12.99-12.01-13.01-14-14.99-15-16-16-17-17-17.99-16-17.01-16-16.99-15-16-14-14.99-12-13-11.01-12-10.98-12-9.48-10.54-14.59-15.06-9.87,10.7-9.61,10.46-13.49,14.46-20.1,21.13-98.78,99.81-46.06,46.98-19.02,20.05-12.51,13.46-8.61,9.46-9.01,10-8.03,9c-7.29,8.16-14.6,16.12-23.67,22.33-16.17,11.07-33.5-3.95-46.14-15.21l-37.03-32.96-10.26-8.96-73.05-62.69-9.6-8.54-10-8.99-9.98-9.06-15.07-13.83c-39.79-36.51-67.26-86.09-75.08-139.87-.08-.57-.12-2.11-.15-2.5-.05-.59-1.02-.54-1.82-.62v-66c1.48.1,2.44-1.27,2.78-3.29,7.36-44.03,27.74-84.24,57.8-117.03,38.78-43.35,95.25-69.58,153.29-71.9l3.07-.12c.39-.02.05-1.56.05-1.65h15ZM940.42,619.1l11.29-10.36,66.45-60.29,11.02-10.14,14.56-13.46,21.97-21.01c8.43-8.06,16.48-16.07,24.49-24.49l18.59-19.55c29.18-30.69,43.53-75.3,39.67-117.62-7.79-85.4-74.85-152.25-160.15-159.06-32.87-2.62-67.28,5.85-94.01,25.51-32.23,23.7-62.01,49.36-91.6,76.11l-12.09,10.94-12.01,10.98-10.46,9.58-13.53,12.44-11.99,11-12.01,10.99-10.5,9.53-10.02,8.98-9.24,8.13,226.81,253.64,12.76-11.85Z"/><path fill="#76797b" d="M3158.23,450.3v37c-.53,0-1.85,1.03-2.15,1.79-5.63,14.26-15.98,25.34-29.78,32.37-14.86,7.58-31.93,11.25-48.81,9.38-25.53-2.82-57.77-20.63-63.36-47.55-1.78-8.58-1.28-18.35,5.55-24.66,5.49-5.07,15.32-5.95,22.01-2.8s10.61,9.21,13.62,15.23c6.51,12.97,18.34,20,33.16,18.32,8.66-.98,17.3-6.58,20.98-14.59,4.54-9.87-.19-19.2-9.47-23.38-23.82-10.73-55.01-12.43-73.75-33.93-11.13-12.77-13.42-25.45-11.8-42.17,1.4-14.48,9.44-26.29,20.12-35.82,16.54-14.77,36.89-18.54,58.67-16.94,20.99,1.54,49.09,17.88,52.08,40.47,1.16,8.78-2.25,16.12-10.54,18.96-5.68,1.95-13.62,2.64-18.6-1.63-2.9-2.49-6.51-5.16-9.01-7.99-11.53-13.04-31.57-15.32-43.86-2.11-2.9,3.11-3.79,8.86-2.64,12.85.89,3.08,4.1,7.07,7.98,8.89,19.39,9.07,35.36,9.5,59.31,22.66,6.92,3.81,12.66,9.04,18.08,14.97,4.74,5.18,7.86,12.02,10.23,18.66l.66,1.84c.12.34,1.02.19,1.34.18Z"/><path fill="#76797b" d="M2086.9,503.84c-.1,10.21-9.82,17.06-18.45,18.6-7.96,1.42-15.24-.21-20.96-4.74-5.88-4.65-8.2-11.49-8.26-19.47l-.74-93.71c-.18-23.13-24.09-38.36-46.47-36.09-18.17,1.84-36.93,16.9-37.11,35.95l-.92,95.82c-.14,14.6-13.38,24.4-27.26,22.6-9.76-1.27-20.33-8.64-20.33-19.64v-152.69c0-11.34,11.07-18.68,21.16-19.78,11.73-1.29,18.05,3.84,24.97,13.5,9.2-12.11,21.96-19.46,36.65-21.95,6.09.13,12.04-.23,18.1.3,20.8,1.81,39.06,12.44,54.31,27.48,24.64-22.25,45.17-29.28,78.76-27.78,21.41,3.13,41.87,12.17,56.37,28.54,12.98,14.65,22.94,32.88,23.01,52.87l.32,97.49c.04,11.06-8.62,19.32-18.75,21.38-13.47,2.73-28.72-5.42-28.79-20.24l-.47-96.87c-.02-4.3-2.23-10.03-4.23-13.72-6.69-12.32-18.42-21.16-32.85-23.11-22.66-3.06-46.85,14.33-47.09,38.12l-.97,97.17Z"/><path fill="#76797b" d="M1677.42,508.79c-22.34,16.94-43.86,23.56-71.14,21.92-17.93-1.08-34.42-5.44-50.16-14.47-29.01-16.65-46.71-46.94-49.52-80.36-2.72-32.39,9.24-63.96,33.62-85.56,24.86-22.02,54.75-31.25,87.97-27.65,26.1,2.82,50.52,15.22,67.94,34.55,16.29,18.08,26.54,40.04,26.69,64.37l.45,76.64c.05,8.52-3.09,15.11-9.05,19.77-6.13,4.8-13.87,5.95-21.91,4.08-6.58-1.53-11.12-6.31-14.9-13.3ZM1594.94,482.14c20.74,7.12,43.75,2.81,59.9-11.03,12.16-10.42,19.67-24.08,20.99-40.13,2-24.26-12.88-46.53-33.34-56.95-22.78-11.6-48.85-8-68.25,8.37-12.58,10.61-20.68,26.07-20.92,42.87-.36,26.22,16.59,48.28,41.6,56.88Z"/><path fill="#76797b" d="M2415.97,508.73c-22.88,16.6-43.5,23.85-71.72,21.98-25.08-1.67-48.74-10.11-67.21-27.2-34.74-32.15-42.52-87.52-19.08-127.68,17.28-29.63,47.88-49.67,82.32-53.16,20.59-2.09,39.13.35,58.1,8.7,34.41,15.14,59.94,47.75,62.18,86.3,1.68,28.91.51,57.42.28,86.26-.09,11.39-14.63,20.84-26,18.99-8.37-1.03-14.8-4.77-18.87-14.19ZM2400.11,464.48c22.05-25.89,17.71-62.18-7.96-83.06s-63.4-18.18-85.78,7.21c-8.54,9.69-14.11,21.52-14.74,35.1-.77,16.78,6.49,33.76,18.98,45,27.51,24.75,67.97,21.04,89.5-4.24Z"/><path fill="#76797b" d="M2950.76,508.92c-21.87,17.02-44.61,23.75-72.5,21.72-59.34-4.32-100.23-48.84-98.14-108.39,1.85-52.71,44.21-94.1,95.17-99.57,8.88-.95,17.92-.78,26.64.08,48.07,4.77,88.56,43.24,94.25,91.72l.05,91.53c-4.93,14.69-19.65,20.43-33.94,14.97-4.26-2.78-7.44-6.29-11.53-12.06ZM2885.58,485.37c17.24.75,32.36-4.55,44.33-15.2,26.5-23.59,26.36-63.94-.58-87.2-9.36-8.08-20.8-13.55-33.58-15.19-36.95-4.74-71.82,26.48-68.54,62.76,2.69,29.83,27.7,53.49,58.37,54.83Z"/><path fill="#76797b" d="M1473.86,388.23c6.12,6.03,8.13,14.85,4.99,22.79-3.32,8.39-10.98,16.02-21,16.05l-96.64.24.04,76.99c-3.14,11.25-12.07,18.49-24,18.65-8.34.12-23.56-6.62-23.59-17.94l-.49-232.38c2.62-9.85,9.55-15.9,19.43-18.33l150.57.07c14.49,0,23.55,13.49,22.1,26.98-1.16,10.8-9.12,16.76-19.79,19.93l-124.26.03v78.98s99.39.02,99.39.02c5.49,1.84,9.44,3.66,13.24,7.91Z"/><path fill="#76797b" d="M2546.97,469.66c24.84,22.29,64.94,18.45,79.29,4.68l16.86-16.2c9.61-9.23,25.16-5.16,32.34,6.15,5.41,8.52,3.16,19.26-3.01,27.31-22.37,29.16-58.05,41.94-94.23,39.01-51.59-4.17-95.08-44.79-98.11-97.18-1.87-32.35,9.88-61.9,33.92-83.49,16.94-15.22,38.15-25.17,61.33-27.26,29.58-2.67,58.75,3.45,81.94,22.58,5.14,4.24,9.55,9.08,13.9,13.99,8.58,9.7,8.54,24.5-1.15,32.48-10.78,8.88-23.17,6.37-32.8-2.5l-8.8-8.11c-8.42-7.76-18.79-11.53-29.92-13.21-34.25-5.17-68.11,18.74-71.31,53.24-1.77,19.07,5.77,35.96,19.75,48.5Z"/><path fill="#76797b" d="M1797.94,503.85c-.11,10.91-10.68,17.84-20.11,18.93-15.96,1.84-26.77-10.17-26.74-25.54l.22-143.85c.02-14.29,12.82-24.2,26.27-22.6,12.32,1.47,20.88,10.62,21.11,23.13,14.68-14.76,28.24-21.51,46.59-27.61,8.99-2.99,17.4-4.4,27.1-4.17,14.68.33,25.06,13.48,22.68,28.2-2.3,14.27-15.35,20.08-29,20.28-32.67.46-67.11,31.22-67.4,60.04l-.72,73.2Z"/><path fill="#76797b" d="M2751,503.74c0,10.98-10.21,17.29-19.74,18.99-10.17,1.81-26.57-4.97-26.57-17.49v-156.88c0-12.53,16.38-19.29,26.6-17.49,9.43,1.66,19.69,8.13,19.69,18.59l.02,154.28Z"/><path fill="#76797b" d="M2757.36,268.84c-1.16,16.91-15.37,26.39-31.26,25.81-16.88-.62-29.54-14.79-27.41-31.79,1.78-14.26,13.23-24.85,27.43-24.83,9.12.01,16.82,1.56,23.08,7.81,5.79,5.77,8.8,13.57,8.15,23Z"/><path fill="#db291c" d="M631.72,592.33c-7.39,5.1-18.1,6.58-24.6.08l-40.94-40.96c-5.72-5.72-4.81-15.23-1.74-21.87l44.01-44.02c6.75-3.68,14.77-3.68,21.54,0l42.87,42.92c4.64,7.73,5.06,17.4-1.55,24.05l-39.6,39.8ZM619.23,504.8l-34.5,34.5,34.5,34.5,34.5-34.5-34.5-34.5Z"/><path fill="#db291c" d="M663.23,916.3h-9c-.2-.76-1.03-2.54-1.72-3.23l-42.03-42.02c-1.41-1.41-1.37-5.06.05-6.49l42.16-42.35c1.67-1.68,6.39-4.47,8.25-2.61l46.02,45.88v5.65s-41.47,41.37-41.47,41.37c-1.11,1.1-1.96,2.69-2.26,3.8Z"/><rect fill="#76797b" x="413.85" y="659.64" width="123.74" height="122.33" transform="translate(-370.35 547.51) rotate(-45)"/><path fill="#76797b" d="M793.06,820.84c-1.88,1.84-8.24,2.42-9.99.74-4.38-4.21-8.72-9.01-12.87-13.3l-30.99-31.97-31.1-31.84c-3.43-3.51-4.34-8.46-.66-11.97l12.84-12.24,31.93-30.96,32.33-31.63c2.46-2.41,8.2-2.44,10.34-.23l16.39,16.92,31.94,32.92,26.28,26.73c3.65,3.71,3.87,8.95.04,12.62l-15.36,14.71-31.92,30.95-29.19,28.55Z"/><path fill="#db291c" d="M621.77,803.3c-2.68,2.68-5.34,2.74-7.81.26l-23.52-23.52c-1.04-1.02-2.46-3.06-2.46-4.24s1.43-3.22,2.44-4.23l23.09-23.08h5.44s26.1,26.1,26.1,26.1v5.42s-23.28,23.29-23.28,23.29Z"/><path fill="#76797b" d="M645.11,716.75c-6.42,6.39-17.63,5.22-23.57-.7l-30.99-30.92c-4.29-6.74-4.79-14.42-.57-21.1l34.03-34.03c6.61-4.07,15.94-4.13,21.88,1.78l29.95,29.8c6.4,6.37,5.33,19.23,1.62,22.93l-32.36,32.23ZM633.73,650.3l-23.5,23.5,24,24,23.5-23.5-24-24Z"/></symbol>
+  </defs>
+</svg>
+
+<header id="topbar">
+  <div class="tb-left">
+    <svg class="tb-logo" viewBox="0 0 3268.34 1016.49" aria-label="Farmacias Peruanas"><use href="#fp-logo-w"/></svg>
+    <div class="tb-divider"></div>
+    <div class="tb-titles">
+      <div class="tb-eyebrow">Área TI · Integraciones</div>
+      <h1 class="tb-title">Cronograma Gantt — Migración a SAP HANA</h1>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-stat">
+      <span class="tb-stat-lbl">Inicio de proyecto</span>
+      <span class="tb-stat-val" id="stat-inicio">—</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-lbl">Fin estimado</span>
+      <span class="tb-stat-val" id="stat-fin">—</span>
+    </div>
+    <button class="btn btn-ghost-light" id="btn-help" title="Ayuda">?</button>
+    <button class="btn btn-logout" id="btn-logout" title="Cerrar sesión">Cerrar sesión</button>
+  </div>
+</header>
+
+<div id="kpi-row" class="kpi-grid c5">
+  <div class="kc">
+    <div class="kc-ey">Total actividades</div>
+    <div class="kc-val" id="kpi-total">0</div>
+    <div class="kc-lbl">En <span id="kpi-secciones">0</span> secciones del proyecto</div>
+  </div>
+  <div class="kc">
+    <div class="kc-ey">Completadas</div>
+    <div class="kc-val" id="kpi-done">0</div>
+    <div class="kc-lbl" id="kpi-done-pct">0% del total</div>
+  </div>
+  <div class="kc">
+    <div class="kc-ey">En curso</div>
+    <div class="kc-val" id="kpi-progress">0</div>
+    <div class="kc-lbl">Actividades activas hoy</div>
+  </div>
+  <div class="kc">
+    <div class="kc-ey">Bloqueadas / en riesgo</div>
+    <div class="kc-val" id="kpi-blocked">0</div>
+    <div class="kc-lbl">Requieren atención</div>
+  </div>
+  <div class="kc amber">
+    <div class="kc-ey">Avance promedio</div>
+    <div class="kc-val" id="kpi-avg">0%</div>
+    <div class="kc-lbl">Ponderado sobre el total de actividades</div>
+  </div>
+</div>
+
+<div id="toolbar">
+  <div class="tbar-group">
+    <span id="server-status" class="file-status">Conectando con el servidor…</span>
+  </div>
+  <div class="tbar-group">
+    <input type="text" id="search" placeholder="Buscar actividad, ID, integración, responsable…">
+  </div>
+  <div class="tbar-group" id="filter-cats"></div>
+  <div class="tbar-group">
+    <select id="filter-resp"><option value="">Responsable: todos</option></select>
+    <select id="filter-estado"><option value="">Estado de desarrollo: todos</option></select>
+    <select id="filter-estado-prueba"><option value="">Estado de prueba: todos</option></select>
+    <select id="filter-dependiente"><option value="">Dependiente: todos</option></select>
+  </div>
+  <div class="tbar-group tbar-actions">
+    <div class="zoom-ctrl">
+      <button id="zoom-out" title="Alejar">−</button>
+      <span id="zoom-lbl">Día</span>
+      <button id="zoom-in" title="Acercar">+</button>
+    </div>
+    <button class="btn btn-outline" id="btn-today">Hoy</button>
+    <button class="btn btn-outline" id="btn-expand">Expandir todo</button>
+    <button class="btn btn-outline" id="btn-collapse">Colapsar todo</button>
+    <button class="btn btn-outline" id="btn-export">Exportar CSV</button>
+    <button class="btn btn-outline" id="btn-export-xlsx">Exportar Excel</button>
+    <button class="btn btn-outline" id="btn-export-docx">Exportar Word</button>
+    <button class="btn btn-outline" id="btn-export-pdf">Descargar PDF</button>
+    <button class="btn btn-outline" id="btn-reset" disabled title="Función deshabilitada">Restablecer</button>
+    <button class="btn btn-primary" id="btn-add-task">+ Nueva actividad</button>
+  </div>
+</div>
+
+<main id="gantt-wrap">
+  <div id="gantt-scroll">
+    <div id="gantt-inner">
+      <div id="header-row"></div>
+      <div id="body-rows"></div>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<!-- LOGIN: pantalla de ingreso (credenciales en la tabla usuarios de SQLite) -->
+<div id="login-screen">
+  <div class="login-left">
+    <svg class="login-logo" viewBox="0 0 3268.34 1016.49" aria-label="Farmacias Peruanas"><use href="#fp-logo-w"/></svg>
+    <div class="login-hero">
+      <div class="login-hello">Bienvenido. Nos encanta verte de nuevo</div>
+      <div class="login-brand">CRONOGRAMA</div>
+      <div class="login-sub">Gestión del cronograma Gantt de integraciones · Migración SAP HANA</div>
+    </div>
+  </div>
+  <div class="login-right">
+    <form class="login-box" id="login-form" autocomplete="off">
+      <h2 class="login-title">Ingreso al sistema</h2>
+      <p class="login-help">Para continuar. Por favor digite sus credenciales asignadas o<br>póngase en contacto con el área encargada.</p>
+      <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+      <div class="login-field">
+        <label for="login-user">Usuario</label>
+        <input type="text" id="login-user" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label for="login-pass">Contraseña</label>
+        <input type="password" id="login-pass" autocomplete="current-password" required>
+      </div>
+      <div class="login-terms">Al ingresar acepta los términos y condiciones</div>
+      <button type="submit" class="login-btn" id="login-btn">Ingresar</button>
+    </form>
+  </div>
+</div>
+
+<!-- OVERLAY: error de conexión con el servidor local -->
+<div id="conn-error">
+  <div class="conn-box">
+    <h3>No se pudo conectar con el servidor</h3>
+    <p>
+      Esta página necesita que el servidor local esté corriendo.<br>
+      Abre una terminal en la carpeta del proyecto y ejecuta <code>python server.py</code>,
+      luego abre <code>http://localhost:8000</code> en el navegador (no como archivo local).
+    </p>
+    <button class="btn btn-primary" id="btn-retry-conn">Reintentar conexión</button>
+  </div>
+</div>
+
+<!-- MODAL: editar/crear tarea -->
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Nueva actividad</h3>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Sección
+          <select id="f-seccion"></select>
+        </label>
+        <label>Categoría
+          <select id="f-categoria"></select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="grow">Actividad *
+          <input type="text" id="f-actividad" placeholder="Descripción de la actividad">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>ID
+          <input type="text" id="f-id" placeholder="Ej. 1-IA">
+        </label>
+        <label>Corporativo
+          <input type="text" id="f-corporativo" placeholder="Ej. INT066">
+        </label>
+        <label>Proceso
+          <input type="text" id="f-proceso" placeholder="Ej. Datos Maestros">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Integraciones
+          <input type="text" id="f-integraciones" placeholder="Ej. MDW -> S4">
+        </label>
+        <label>Microservicio
+          <input type="text" id="f-microservicio" placeholder="Ej. Nuevo">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Responsable
+          <input type="text" id="f-responsable" list="dl-responsables" placeholder="Nombre del responsable">
+          <datalist id="dl-responsables"></datalist>
+        </label>
+        <label>Estado
+          <select id="f-estado"></select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Fecha inicio
+          <input type="date" id="f-inicio">
+        </label>
+        <label>Duración (días)
+          <input type="number" id="f-duracion" min="1" value="1">
+        </label>
+        <label>Fecha fin (calculada)
+          <input type="text" id="f-fin" readonly>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="grow">Dependiente
+          <select id="f-dependiente"></select>
+        </label>
+        <label>Estado de prueba
+          <select id="f-estado-prueba"></select>
+        </label>
+        <label class="grow">Owner - KU
+          <select id="f-owner-ku"></select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label class="grow">% Avance: <b id="f-avance-lbl">0%</b>
+          <input type="range" id="f-avance" min="0" max="100" step="5" value="0">
+        </label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="btn-delete-task" style="display:none;">Eliminar actividad</button>
+      <div class="modal-foot-right">
+        <button class="btn btn-outline" id="btn-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-task">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLTIP flotante para barras -->
+<div id="bar-tooltip" class="bar-tooltip"></div>
+
+<footer id="page-footer">
+  <span>Equipo TI · Integraciones SAP HANA · Farmacias Peruanas</span>
+  <span>Datos guardados en SQLite en el servidor local (cronograma.sqlite) · Información interna</span>
+</footer>
+
+<script>
+
+/* ══════════════ METADATOS (constantes de la app) ══════════════ */
+const RESOURCES = ["Luis Pastor", "Pedro Novoa", "Gaby Marapi", "Isaac Jurado", "Ruben Mendoza", "Juan Seperak", "Joseph Salazar", "Hellen Menacho", "Jorge Villacorta", "Jose Jara"];
+const PROJECT_START = "2026-07-06";
+
+const CATEGORIAS = {
+  "IA":      {label:"IA · Planificación",        color:"#8B0000"},
+  "DM":      {label:"DM · Datos Maestros",        color:"#F02615"},
+  "CU1":     {label:"CU1 · Ventas/Distribución",  color:"#B32515"},
+  "TITAN":   {label:"TITAN · Pedidos/Devol.",     color:"#1A1A1A"},
+  "CU0":     {label:"CU0 · Compras",              color:"#7A7B7E"},
+  "WMS":     {label:"WMS · Almacén",              color:"#FAB701"},
+  "B2B-FP":  {label:"B2B · Mayorista/Consumo",    color:"#8a6000"},
+};
+function catMeta(c){ return CATEGORIAS[c] || {label:c||"Sin categoría", color:"#B0AFAC"}; }
+
+const ESTADOS = {
+  "No iniciado": {color:"#7A7B7E", bg:"#EDEBE9"},
+  "En curso":    {color:"#8a6000", bg:"#FFF3D6"},
+  "Completado":  {color:"#1a7a38", bg:"#E1F3E6"},
+  "Bloqueado":   {color:"#8B0000", bg:"#FBE3E0"},
+};
+function estadoMeta(e){ return ESTADOS[e] || ESTADOS["No iniciado"]; }
+
+const ESTADOS_PRUEBA = {
+  "No iniciado": {color:"#7A7B7E", bg:"#EDEBE9"},
+  "En Curso":    {color:"#8a6000", bg:"#FFF3D6"},
+  "Completado":  {color:"#1a7a38", bg:"#E1F3E6"},
+  "Desestimado": {color:"#8B0000", bg:"#FBE3E0"},
+};
+function estadoPruebaMeta(e){ return ESTADOS_PRUEBA[e] || ESTADOS_PRUEBA["No iniciado"]; }
+
+const DEPENDIENTES = ["EQUIPO SAP S/4", "EQUIPO FAPE", "OTROS"];
+function dependienteOptionsHTML(selected){
+  const sel = selected || "";
+  const opts = [`<option value=""${sel===""?" selected":""}>— Sin asignar —</option>`];
+  const known = new Set(DEPENDIENTES);
+  DEPENDIENTES.forEach(d=>{ opts.push(`<option value="${esc(d)}"${d===sel?" selected":""}>${esc(d)}</option>`); });
+  if(sel && !known.has(sel)) opts.push(`<option value="${esc(sel)}" selected>${esc(sel)}</option>`);
+  return opts.join("");
+}
+
+function ownerOptionsHTML(selected, includeAdd){
+  const sel = selected || "";
+  const opts = [`<option value=""${sel===""?" selected":""}>— Sin owner —</option>`];
+  const known = new Set(OWNERS);
+  OWNERS.forEach(o=>{ opts.push(`<option value="${esc(o)}"${o===sel?" selected":""}>${esc(o)}</option>`); });
+  if(sel && !known.has(sel)) opts.push(`<option value="${esc(sel)}" selected>${esc(sel)}</option>`);
+  if(includeAdd) opts.push('<option value="__add__">＋ Nuevo owner…</option>');
+  return opts.join("");
+}
+
+const AVATAR_COLORS = ["#8B0000","#F02615","#B32515","#1A1A1A","#7A7B7E","#8a6000","#5a3800","#B0AFAC","#4a3a10","#6d2a1f"];
+function avatarColor(name){
+  if(!name) return "#B0AFAC";
+  let h=0; for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function initials(name){
+  if(!name) return "—";
+  const parts = name.trim().split(/\s+/);
+  return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
+}
+
+/* ══════════════ ESTADO DE LA APP ══════════════ */
+let DATA = [];
+let OWNERS = [];
+let collapsedGroups = new Set();
+let filters = { search:"", categorias:new Set(), responsable:"", estado:"", estado_prueba:"", dependiente:"" };
+let dayWidth = 34;
+let editingUid = null;
+let connected = false;
+let scrolledToToday = false;
+
+/* ══════════════ API (fetch al servidor local, SQLite sin ORM) ══════════════ */
+async function apiGet(path){
+  const res = await fetch(path);
+  if(!res.ok) throw new Error("GET "+path);
+  return res.json();
+}
+async function apiPost(path, body){
+  const res = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||{})});
+  if(!res.ok) throw new Error("POST "+path);
+  return res.json();
+}
+async function apiPut(path, body){
+  const res = await fetch(path, {method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||{})});
+  if(!res.ok) throw new Error("PUT "+path);
+  return res.json();
+}
+async function apiDelete(path){
+  const res = await fetch(path, {method:"DELETE"});
+  if(!res.ok) throw new Error("DELETE "+path);
+  return res.json();
+}
+
+function setServerStatus(ok){
+  connected = ok;
+  const el = document.getElementById("server-status");
+  const overlay = document.getElementById("conn-error");
+  if(el){
+    el.textContent = ok ? "Conectado a la base de datos SQLite" : "Sin conexión con el servidor";
+    el.className = "file-status " + (ok ? "ok" : "warn");
+  }
+  overlay.classList.toggle("show", !ok);
+}
+
+async function loadDataFromServer(){
+  try{
+    const json = await apiGet("/api/data");
+    DATA = json.groups || [];
+    OWNERS = json.owners || [];
+    setServerStatus(true);
+    renderAll();
+    if(!scrolledToToday){ scrolledToToday = true; setTimeout(scrollToToday, 80); }
+  }catch(err){
+    setServerStatus(false);
+  }
+}
+
+/* ══════════════ FECHAS ══════════════ */
+function parseD(s){ if(!s) return null; const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+function fmtD(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), dd=String(d.getDate()).padStart(2,"0"); return `${y}-${m}-${dd}`; }
+function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function diffDays(a,b){ return Math.round((b-a)/86400000); }
+function fmtShort(d){ const MESES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]; return `${d.getDate()} ${MESES[d.getMonth()]}`; }
+const DOW = ["D","L","M","M","J","V","S"];
+const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+function computeRange(){
+  let min=parseD(PROJECT_START), max=addDays(parseD(PROJECT_START),20);
+  DATA.forEach(g=>g.tasks.forEach(t=>{
+    if(t.inicio){ const d=parseD(t.inicio); if(d<min) min=d; }
+    if(t.fin){ const d=parseD(t.fin); if(d>max) max=d; }
+  }));
+  min = addDays(min,-2);
+  max = addDays(max,4);
+  const days=[]; let cur=min;
+  while(cur<=max){ days.push(new Date(cur)); cur=addDays(cur,1); }
+  return {min,max,days};
+}
+
+/* ══════════════ RENDER: TOP STATS / KPIs ══════════════ */
+function allTasks(){ let arr=[]; DATA.forEach(g=>g.tasks.forEach(t=>arr.push(t))); return arr; }
+
+function renderTopStats(){
+  const tasks = allTasks();
+  let min=null,max=null;
+  tasks.forEach(t=>{
+    if(t.inicio){ const d=parseD(t.inicio); if(!min||d<min) min=d; }
+    if(t.fin){ const d=parseD(t.fin); if(!max||d>max) max=d; }
+  });
+  document.getElementById("stat-inicio").textContent = min ? fmtShort(min)+" "+min.getFullYear() : "—";
+  document.getElementById("stat-fin").textContent = max ? fmtShort(max)+" "+max.getFullYear() : "—";
+}
+
+function renderKPIs(){
+  const tasks = allTasks();
+  const total = tasks.length;
+  const done = tasks.filter(t=>t.estado==="Completado").length;
+  const enCurso = tasks.filter(t=>t.estado==="En curso").length;
+  const blocked = tasks.filter(t=>t.estado==="Bloqueado").length;
+  const avg = total ? Math.round(tasks.reduce((s,t)=>s+(Number(t.avance)||0),0)/total) : 0;
+  document.getElementById("kpi-total").textContent = total;
+  document.getElementById("kpi-secciones").textContent = DATA.length;
+  document.getElementById("kpi-done").textContent = done;
+  document.getElementById("kpi-done-pct").textContent = (total?Math.round(done/total*100):0)+"% del total";
+  document.getElementById("kpi-progress").textContent = enCurso;
+  document.getElementById("kpi-blocked").textContent = blocked;
+  document.getElementById("kpi-avg").textContent = avg+"%";
+}
+
+/* ══════════════ FILTROS ══════════════ */
+function renderFilterChips(){
+  const wrap = document.getElementById("filter-cats");
+  wrap.innerHTML = "";
+  Object.keys(CATEGORIAS).forEach(key=>{
+    const meta = CATEGORIAS[key];
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.innerHTML = `<span class="dot" style="background:${meta.color}"></span>${key}`;
+    chip.addEventListener("click", ()=>{
+      if(filters.categorias.has(key)) filters.categorias.delete(key); else filters.categorias.add(key);
+      updateChipStyles(); renderGantt();
+    });
+    chip.dataset.cat = key;
+    wrap.appendChild(chip);
+  });
+  updateChipStyles();
+}
+function updateChipStyles(){
+  document.querySelectorAll("#filter-cats .chip").forEach(chip=>{
+    const key = chip.dataset.cat;
+    const active = filters.categorias.has(key);
+    chip.classList.toggle("active", active);
+    chip.style.background = active ? CATEGORIAS[key].color : "#fff";
+    chip.style.borderColor = active ? CATEGORIAS[key].color : "";
+  });
+}
+function renderFilterSelects(){
+  const respSel = document.getElementById("filter-resp");
+  const prevResp = respSel.value;
+  const respSet = new Set(RESOURCES);
+  allTasks().forEach(t=>{ if(t.responsable) respSet.add(t.responsable); });
+  respSel.innerHTML = '<option value="">Responsable: todos</option>' + [...respSet].sort().map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join("");
+  respSel.value = prevResp;
+
+  const estSel = document.getElementById("filter-estado");
+  const prevEst = estSel.value;
+  estSel.innerHTML = '<option value="">Estado de desarrollo: todos</option>' + Object.keys(ESTADOS).map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
+  estSel.value = prevEst;
+
+  const estPSel = document.getElementById("filter-estado-prueba");
+  const prevEstP = estPSel.value;
+  estPSel.innerHTML = '<option value="">Estado de prueba: todos</option>' + Object.keys(ESTADOS_PRUEBA).map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("");
+  estPSel.value = prevEstP;
+
+  const depSel = document.getElementById("filter-dependiente");
+  const prevDep = depSel.value;
+  const depSet = new Set(DEPENDIENTES);
+  allTasks().forEach(t=>{ if(t.dependiente) depSet.add(t.dependiente); });
+  depSel.innerHTML = '<option value="">Dependiente: todos</option>' + [...depSet].map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("");
+  depSel.value = prevDep;
+
+  const dl = document.getElementById("dl-responsables");
+  dl.innerHTML = [...respSet].sort().map(r=>`<option value="${esc(r)}">`).join("");
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+
+/* ══════════════ GANTT RENDER ══════════════ */
+function taskVisible(t){
+  if(filters.categorias.size && !filters.categorias.has(t.categoria)) return false;
+  if(filters.responsable && t.responsable !== filters.responsable) return false;
+  if(filters.estado && t.estado !== filters.estado) return false;
+  if(filters.estado_prueba && t.estado_prueba !== filters.estado_prueba) return false;
+  if(filters.dependiente && t.dependiente !== filters.dependiente) return false;
+  if(filters.search){
+    const s = filters.search.toLowerCase();
+    const hay = [t.actividad,t.id,t.corporativo,t.integraciones,t.responsable,t.proceso,t.microservicio].join(" ").toLowerCase();
+    if(!hay.includes(s)) return false;
+  }
+  return true;
+}
+
+function renderHeader(range){
+  const hdr = document.getElementById("header-row");
+  hdr.innerHTML = "";
+  hdr.style.width = (1706 + range.days.length*dayWidth) + "px";
+
+  const metaWrap = document.createElement("div");
+  metaWrap.className = "hdr-meta";
+  metaWrap.innerHTML = `
+    <div class="meta-cell col-n">N°</div>
+    <div class="meta-cell col-act">Actividad</div>
+    <div class="meta-cell col-resp">Responsable</div>
+    <div class="meta-cell col-fechas">Fechas</div>
+    <div class="meta-cell col-corporativo">Corporativo</div>
+    <div class="meta-cell col-microservicio">Microservicio</div>
+    <div class="meta-cell col-avance">Avance</div>
+    <div class="meta-cell col-estado">Estado de<br>desarrollo</div>
+    <div class="meta-cell col-dependiente">Dependiente</div>
+    <div class="meta-cell col-estado-prueba">Estado de<br>prueba</div>
+    <div class="meta-cell col-owner-ku">Owner - KU</div>
+    <div class="meta-cell col-actions"></div>
+  `;
+  hdr.appendChild(metaWrap);
+
+  const daysWrap = document.createElement("div");
+  daysWrap.className = "hdr-days";
+  daysWrap.style.width = (range.days.length*dayWidth)+"px";
+
+  const monthsRow = document.createElement("div");
+  monthsRow.className = "hdr-months";
+  let i=0;
+  while(i<range.days.length){
+    const d = range.days[i];
+    let span=0;
+    while(i+span<range.days.length && range.days[i+span].getMonth()===d.getMonth() && range.days[i+span].getFullYear()===d.getFullYear()) span++;
+    const div = document.createElement("div");
+    div.style.width = (span*dayWidth)+"px";
+    div.textContent = MESES_FULL[d.getMonth()] + " " + d.getFullYear();
+    monthsRow.appendChild(div);
+    i+=span;
+  }
+  daysWrap.appendChild(monthsRow);
+
+  const numsRow = document.createElement("div");
+  numsRow.className = "hdr-daynums";
+  const today = fmtD(new Date());
+  range.days.forEach(d=>{
+    const col = document.createElement("div");
+    const isWeekend = d.getDay()===0 || d.getDay()===6;
+    const isToday = fmtD(d)===today;
+    col.className = "day-col" + (isWeekend?" weekend":"") + (isToday?" today":"");
+    col.style.width = dayWidth+"px";
+    col.innerHTML = `<span class="dow">${DOW[d.getDay()]}</span><span class="num">${d.getDate()}</span>`;
+    numsRow.appendChild(col);
+  });
+  daysWrap.appendChild(numsRow);
+  hdr.appendChild(daysWrap);
+}
+
+function renderBody(range){
+  const body = document.getElementById("body-rows");
+  body.innerHTML = "";
+  const totalW = 1706 + range.days.length*dayWidth;
+  body.style.width = totalW+"px";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayStr = fmtD(today);
+  const todayInRange = todayStr >= fmtD(range.min) && todayStr <= fmtD(range.max);
+  const todayOffset = todayInRange ? diffDays(range.min, today)*dayWidth : null;
+
+  DATA.forEach(group=>{
+    const visibleTasks = group.tasks.filter(taskVisible);
+    if(visibleTasks.length===0 && (filters.search||filters.categorias.size||filters.responsable||filters.estado||filters.estado_prueba||filters.dependiente)) return;
+
+    const collapsed = collapsedGroups.has(group.uid);
+    const avgProg = group.tasks.length ? Math.round(group.tasks.reduce((s,t)=>s+(Number(t.avance)||0),0)/group.tasks.length) : 0;
+
+    const grpRow = document.createElement("div");
+    grpRow.className = "grp-row" + (collapsed ? " collapsed":"");
+    grpRow.style.width = totalW+"px";
+    grpRow.innerHTML = `
+      <div class="grp-sticky">
+        <button class="grp-toggle">▾</button>
+        <span class="grp-title" contenteditable="true" spellcheck="false" data-gid="${group.uid}">${esc(group.titulo)}</span>
+        <span class="grp-count">${group.tasks.length} act. · ${avgProg}%</span>
+        <button class="grp-del" title="Eliminar sección">🗑</button>
+      </div>
+      <div class="grp-bar"></div>
+    `;
+    grpRow.querySelector(".grp-toggle").addEventListener("click", ()=>{
+      if(collapsedGroups.has(group.uid)) collapsedGroups.delete(group.uid); else collapsedGroups.add(group.uid);
+      renderGantt();
+    });
+    grpRow.querySelector(".grp-title").addEventListener("blur", async (e)=>{
+      const nuevo = e.target.textContent.trim() || group.titulo;
+      if(nuevo === group.titulo) return;
+      const anterior = group.titulo;
+      group.titulo = nuevo;
+      try{ await apiPut(`/api/groups/${group.uid}`, {titulo: nuevo}); toast("Sección actualizada"); }
+      catch(err){ group.titulo = anterior; toast("No se pudo guardar (¿servidor activo?)"); }
+      renderGantt();
+    });
+    grpRow.querySelector(".grp-title").addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ e.preventDefault(); e.target.blur(); } });
+    grpRow.querySelector(".grp-del").addEventListener("click", async (e)=>{
+      e.stopPropagation();
+      if(confirm(`¿Eliminar la sección "${group.titulo}" y sus ${group.tasks.length} actividad(es)?`)){
+        try{
+          await apiDelete(`/api/groups/${group.uid}`);
+          DATA = DATA.filter(g=>g.uid!==group.uid);
+          renderAll(); toast("Sección eliminada");
+        }catch(err){ toast("No se pudo eliminar (¿servidor activo?)"); }
+      }
+    });
+    body.appendChild(grpRow);
+
+    if(collapsed) return;
+
+    visibleTasks.forEach(t=>{
+      const row = document.createElement("div");
+      row.className = "task-row";
+      row.style.width = totalW+"px";
+      const meta = catMeta(t.categoria);
+      const est = estadoMeta(t.estado);
+      const estP = estadoPruebaMeta(t.estado_prueba);
+      const avance = Number(t.avance)||0;
+
+      row.innerHTML = `
+        <div class="meta-cell col-n">${t.n ?? ""}</div>
+        <div class="meta-cell col-act">
+          <div style="display:flex;align-items:center;gap:6px;width:100%;">
+            <span class="cat-dot" style="background:${meta.color}"></span>
+            <span class="act-title" title="${esc(t.actividad)}">${esc(t.actividad||"(sin nombre)")}</span>
+          </div>
+          <span class="act-sub" title="${esc([t.proceso,t.integraciones,t.microservicio].filter(Boolean).join(' · '))}">${esc([t.id, t.proceso].filter(Boolean).join(" · ") || "—")}</span>
+        </div>
+        <div class="meta-cell col-resp">
+          <div class="resp-avatar" style="background:${avatarColor(t.responsable)}">${esc(initials(t.responsable))}</div>
+          <span class="resp-name" title="${esc(t.responsable)}">${esc(t.responsable || "Sin asignar")}</span>
+        </div>
+        <div class="meta-cell col-fechas">
+          <span class="fechas-main">${t.inicio ? fmtShort(parseD(t.inicio)) : "—"} → ${t.fin ? fmtShort(parseD(t.fin)) : "—"}</span>
+          <span class="fechas-sub">${t.duracion ? t.duracion+" día(s)" : "sin definir"}</span>
+        </div>
+        <div class="meta-cell col-corporativo"><span class="corp-text" title="${esc(t.corporativo)}">${esc(t.corporativo || "—")}</span></div>
+        <div class="meta-cell col-microservicio"><span class="micro-text" title="${esc(t.microservicio)}">${esc(t.microservicio || "—")}</span></div>
+        <div class="meta-cell col-avance">
+          <svg class="avance-ring" viewBox="0 0 36 36" width="28" height="28">
+            <circle class="ring-bg" cx="18" cy="18" r="15.9155"></circle>
+            <circle class="ring-fg" cx="18" cy="18" r="15.9155" transform="rotate(-90 18 18)" style="stroke:${est.color};stroke-dasharray:${avance} 100;"></circle>
+          </svg>
+          <span class="avance-txt">${avance}%</span>
+        </div>
+        <div class="meta-cell col-estado"><span class="estado-badge" style="color:${est.color};background:${est.bg}">${esc(t.estado)}</span></div>
+        <div class="meta-cell col-dependiente">
+          <select class="dependiente-select">${dependienteOptionsHTML(t.dependiente)}</select>
+        </div>
+        <div class="meta-cell col-estado-prueba"><span class="estado-badge" style="color:${estP.color};background:${estP.bg}">${esc(t.estado_prueba || "No iniciado")}</span></div>
+        <div class="meta-cell col-owner-ku">
+          <select class="owner-select">${ownerOptionsHTML(t.owner_ku, true)}</select>
+        </div>
+        <div class="meta-cell col-actions row-actions">
+          <button class="icon-btn edit" title="Editar">✏️</button>
+          <button class="icon-btn del" title="Eliminar">🗑</button>
+        </div>
+        <div class="timeline-area" style="width:${range.days.length*dayWidth}px;"></div>
+      `;
+
+      const timeline = row.querySelector(".timeline-area");
+      range.days.forEach((d,idx)=>{
+        const isWeekend = d.getDay()===0 || d.getDay()===6;
+        if(isWeekend){
+          const gl = document.createElement("div");
+          gl.className = "gridline weekend";
+          gl.style.left = (idx*dayWidth)+"px"; gl.style.width = dayWidth+"px";
+          timeline.appendChild(gl);
+        }
+      });
+      if(todayOffset!==null){
+        const tl = document.createElement("div");
+        tl.className = "today-line";
+        tl.style.left = todayOffset+"px";
+        timeline.appendChild(tl);
+      }
+
+      if(t.inicio && t.fin){
+        const start = parseD(t.inicio), end = parseD(t.fin);
+        const left = diffDays(range.min, start)*dayWidth;
+        const dur = Math.max(1, diffDays(start,end)+1);
+        const width = Math.max(dur*dayWidth - 3, 16);
+        const bar = document.createElement("div");
+        bar.className = "gantt-bar";
+        bar.style.left = left+"px";
+        bar.style.width = width+"px";
+        bar.style.background = meta.color;
+        bar.innerHTML = `<div class="fill" style="width:${avance}%"></div><span class="lbl">${esc(t.actividad)}</span>`;
+        bar.addEventListener("click", ()=>openModal(group.uid, t.uid));
+        bar.addEventListener("mousemove", (e)=>showTooltip(e, t, meta, est));
+        bar.addEventListener("mouseleave", hideTooltip);
+        timeline.appendChild(bar);
+      } else {
+        const bar = document.createElement("div");
+        bar.className = "gantt-bar no-date";
+        bar.style.left = "4px"; bar.style.width = (dayWidth*3)+"px";
+        bar.innerHTML = `<span class="lbl" style="color:var(--g1);text-shadow:none;">Sin fecha</span>`;
+        bar.addEventListener("click", ()=>openModal(group.uid, t.uid));
+        timeline.appendChild(bar);
+      }
+
+      row.querySelector(".edit").addEventListener("click", ()=>openModal(group.uid, t.uid));
+      row.querySelector(".del").addEventListener("click", async ()=>{
+        if(confirm(`¿Eliminar la actividad "${t.actividad}"?`)){
+          try{
+            await apiDelete(`/api/tasks/${t.uid}`);
+            group.tasks = group.tasks.filter(x=>x.uid!==t.uid);
+            renderAll(); toast("Actividad eliminada");
+          }catch(err){ toast("No se pudo eliminar (¿servidor activo?)"); }
+        }
+      });
+      row.querySelector(".dependiente-select").addEventListener("change", async (e)=>{
+        const nuevo = e.target.value;
+        const anterior = t.dependiente;
+        if(nuevo === (anterior || "")) return;
+        t.dependiente = nuevo;
+        try{ await apiPut(`/api/tasks/${t.uid}`, {dependiente: nuevo}); renderFilterSelects(); }
+        catch(err){ t.dependiente = anterior; e.target.value = anterior || ""; toast("No se pudo guardar (¿servidor activo?)"); }
+      });
+      row.querySelector(".dependiente-select").addEventListener("click", (e)=>{ e.stopPropagation(); });
+      row.querySelector(".owner-select").addEventListener("change", async (e)=>{
+        let nuevo = e.target.value;
+        if(nuevo === "__add__"){
+          const nombre = (prompt("Nombre del nuevo OWNER - KU:") || "").trim();
+          if(!nombre){ e.target.value = t.owner_ku || ""; return; }
+          try{ await apiPost("/api/owners", {nombre}); }
+          catch(err){ toast("No se pudo agregar el owner (¿servidor activo?)"); e.target.value = t.owner_ku || ""; return; }
+          if(!OWNERS.includes(nombre)){ OWNERS.push(nombre); OWNERS.sort(); }
+          nuevo = nombre;
+        }
+        const anterior = t.owner_ku;
+        if(nuevo === (anterior || "")){ renderGantt(); return; }
+        t.owner_ku = nuevo;
+        try{ await apiPut(`/api/tasks/${t.uid}`, {owner_ku: nuevo}); }
+        catch(err){ t.owner_ku = anterior; toast("No se pudo guardar (¿servidor activo?)"); }
+        renderGantt();
+      });
+      row.querySelector(".owner-select").addEventListener("click", (e)=>{ e.stopPropagation(); });
+
+      body.appendChild(row);
+    });
+  });
+
+  if(body.children.length===0){
+    const empty = document.createElement("div");
+    empty.style.cssText = "padding:3rem;text-align:center;color:var(--g2);font-size:13px;";
+    empty.textContent = "No hay actividades que coincidan con los filtros aplicados.";
+    body.appendChild(empty);
+  }
+}
+
+function showTooltip(e, t, meta, est){
+  const tt = document.getElementById("bar-tooltip");
+  tt.innerHTML = `
+    <b>${esc(t.actividad)}</b>
+    <div class="tt-row">${esc(meta.label)} ${t.id ? "· "+esc(t.id) : ""}</div>
+    <div class="tt-row">👤 ${esc(t.responsable||"Sin asignar")}</div>
+    <div class="tt-row">📅 ${t.inicio?fmtShort(parseD(t.inicio)):"—"} → ${t.fin?fmtShort(parseD(t.fin)):"—"} (${t.duracion||"?"} d)</div>
+    <div class="tt-row">📊 ${t.avance||0}% avance · <span style="color:${est.color}">${esc(t.estado)}</span></div>
+    ${t.integraciones ? `<div class="tt-row">🔗 ${esc(t.integraciones)}</div>` : ""}
+  `;
+  tt.style.left = (e.clientX+14)+"px";
+  tt.style.top = (e.clientY+14)+"px";
+  tt.classList.add("show");
+}
+function hideTooltip(){ document.getElementById("bar-tooltip").classList.remove("show"); }
+
+function renderGantt(){
+  const range = computeRange();
+  renderHeader(range);
+  renderBody(range);
+}
+
+function renderAll(){
+  renderTopStats();
+  renderKPIs();
+  renderFilterSelects();
+  renderGantt();
+}
+
+function scrollToToday(){
+  const range = computeRange();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const offset = diffDays(range.min, today)*dayWidth;
+  document.getElementById("gantt-scroll").scrollLeft = Math.max(0, offset - 300);
+}
+
+/* ══════════════ MODAL ══════════════ */
+function populateSelects(){
+  const secSel = document.getElementById("f-seccion");
+  secSel.innerHTML = DATA.map(g=>`<option value="${esc(g.uid)}">${esc(g.titulo)}</option>`).join("") + `<option value="__new__">+ Nueva sección…</option>`;
+
+  const catSel = document.getElementById("f-categoria");
+  catSel.innerHTML = Object.keys(CATEGORIAS).map(k=>`<option value="${k}">${esc(CATEGORIAS[k].label)}</option>`).join("");
+
+  const estSel = document.getElementById("f-estado");
+  estSel.innerHTML = Object.keys(ESTADOS).map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+
+  const estPSel = document.getElementById("f-estado-prueba");
+  estPSel.innerHTML = Object.keys(ESTADOS_PRUEBA).map(k=>`<option value="${esc(k)}">${esc(k)}</option>`).join("");
+}
+
+function updateFechaFin(){
+  const inicio = document.getElementById("f-inicio").value;
+  const dur = parseInt(document.getElementById("f-duracion").value)||1;
+  if(inicio){
+    const end = addDays(parseD(inicio), Math.max(dur,1)-1);
+    document.getElementById("f-fin").value = fmtShort(end) + " " + end.getFullYear();
+    document.getElementById("f-fin").dataset.iso = fmtD(end);
+  } else {
+    document.getElementById("f-fin").value = "";
+  }
+}
+
+function openModal(gUid, tUid){
+  populateSelects();
+  const overlay = document.getElementById("modal-overlay");
+  const isNew = !tUid;
+  document.getElementById("modal-title").textContent = isNew ? "Nueva actividad" : "Editar actividad";
+  document.getElementById("btn-delete-task").style.display = isNew ? "none" : "inline-flex";
+  editingUid = isNew ? {gUid: gUid || (DATA[0] && DATA[0].uid), tUid:null} : {gUid, tUid};
+
+  let t = {actividad:"",id:"",corporativo:"",categoria:Object.keys(CATEGORIAS)[0],proceso:"",integraciones:"",microservicio:"",responsable:"",estado:"No iniciado",estado_prueba:"No iniciado",inicio:fmtD(new Date()),duracion:1,fin:"",avance:0,dependiente:"",owner_ku:""};
+  if(!isNew){
+    const g = DATA.find(x=>x.uid===gUid);
+    const found = g && g.tasks.find(x=>x.uid===tUid);
+    if(found) t = found;
+  }
+
+  document.getElementById("f-seccion").value = gUid || (DATA[0] && DATA[0].uid) || "";
+  document.getElementById("f-categoria").value = t.categoria || Object.keys(CATEGORIAS)[0];
+  document.getElementById("f-actividad").value = t.actividad || "";
+  document.getElementById("f-id").value = t.id || "";
+  document.getElementById("f-corporativo").value = t.corporativo || "";
+  document.getElementById("f-proceso").value = t.proceso || "";
+  document.getElementById("f-integraciones").value = t.integraciones || "";
+  document.getElementById("f-microservicio").value = t.microservicio || "";
+  document.getElementById("f-responsable").value = t.responsable || "";
+  document.getElementById("f-estado").value = t.estado || "No iniciado";
+  document.getElementById("f-estado-prueba").value = t.estado_prueba || "No iniciado";
+  document.getElementById("f-inicio").value = t.inicio || "";
+  document.getElementById("f-duracion").value = t.duracion || 1;
+  document.getElementById("f-avance").value = t.avance || 0;
+  document.getElementById("f-avance-lbl").textContent = (t.avance||0)+"%";
+  document.getElementById("f-dependiente").innerHTML = dependienteOptionsHTML(t.dependiente);
+  document.getElementById("f-owner-ku").innerHTML = ownerOptionsHTML(t.owner_ku, false);
+  updateFechaFin();
+
+  overlay.classList.add("show");
+}
+function closeModal(){ document.getElementById("modal-overlay").classList.remove("show"); editingUid=null; }
+
+async function saveTaskFromForm(){
+  const actividad = document.getElementById("f-actividad").value.trim();
+  if(!actividad){ toast("La actividad necesita un nombre"); return; }
+  let secVal = document.getElementById("f-seccion").value;
+
+  if(secVal === "__new__"){
+    const titulo = prompt("Nombre de la nueva sección:");
+    if(!titulo) return;
+    try{
+      const res = await apiPost("/api/groups", {titulo});
+      DATA.push({uid: res.uid, titulo, tasks: []});
+      secVal = res.uid;
+    }catch(err){ toast("No se pudo crear la sección (¿servidor activo?)"); return; }
+  }
+
+  const inicio = document.getElementById("f-inicio").value || null;
+  const duracion = parseInt(document.getElementById("f-duracion").value) || 1;
+  const fin = inicio ? document.getElementById("f-fin").dataset.iso : null;
+
+  const payload = {
+    id: document.getElementById("f-id").value.trim(),
+    corporativo: document.getElementById("f-corporativo").value.trim(),
+    categoria: document.getElementById("f-categoria").value,
+    proceso: document.getElementById("f-proceso").value.trim(),
+    actividad,
+    integraciones: document.getElementById("f-integraciones").value.trim(),
+    microservicio: document.getElementById("f-microservicio").value.trim(),
+    responsable: document.getElementById("f-responsable").value.trim(),
+    estado: document.getElementById("f-estado").value,
+    estado_prueba: document.getElementById("f-estado-prueba").value,
+    inicio, duracion, fin,
+    avance: parseInt(document.getElementById("f-avance").value)||0,
+    dependiente: document.getElementById("f-dependiente").value.trim(),
+    owner_ku: document.getElementById("f-owner-ku").value.trim(),
+  };
+
+  const targetGroup = DATA.find(g=>g.uid===secVal);
+  try{
+    if(!editingUid.tUid){
+      const apiPayload = Object.assign({grupo_uid: secVal}, payload);
+      const res = await apiPost("/api/tasks", apiPayload);
+      const created = Object.assign({uid: res.uid, n: targetGroup.tasks.length + 1}, payload);
+      targetGroup.tasks.push(created);
+    } else {
+      const origGroup = DATA.find(g=>g.uid===editingUid.gUid);
+      const idx = origGroup.tasks.findIndex(x=>x.uid===editingUid.tUid);
+      const existing = origGroup.tasks[idx];
+      const updated = Object.assign({}, existing, payload);
+      const apiPayload = Object.assign({}, payload);
+      if(secVal !== editingUid.gUid) apiPayload.grupo_uid = secVal;
+      await apiPut(`/api/tasks/${editingUid.tUid}`, apiPayload);
+      if(secVal !== editingUid.gUid){
+        origGroup.tasks.splice(idx,1);
+        updated.n = targetGroup.tasks.length + 1;
+        targetGroup.tasks.push(updated);
+      } else {
+        origGroup.tasks[idx] = updated;
+      }
+    }
+    closeModal();
+    renderAll();
+    toast("Actividad guardada");
+  }catch(err){
+    toast("No se pudo guardar (¿servidor activo?)");
+  }
+}
+
+async function deleteEditingTask(){
+  if(!editingUid || !editingUid.tUid) return;
+  try{
+    await apiDelete(`/api/tasks/${editingUid.tUid}`);
+    const g = DATA.find(x=>x.uid===editingUid.gUid);
+    g.tasks = g.tasks.filter(t=>t.uid!==editingUid.tUid);
+    closeModal();
+    renderAll();
+    toast("Actividad eliminada");
+  }catch(err){ toast("No se pudo eliminar (¿servidor activo?)"); }
+}
+
+/* ══════════════ TOAST ══════════════ */
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 2200);
+}
+
+/* ══════════════ EXPORT CSV ══════════════ */
+function exportCSV(){
+  const rows = [["Sección","N°","ID","Corporativo","Categoría","Proceso","Actividad","Integraciones","Microservicio","Responsable","Estado","Fecha Inicio","Duración (d)","Fecha Fin","% Avance","Dependiente","Estado de Prueba","Owner - KU"]];
+  DATA.forEach(g=>g.tasks.forEach(t=>{
+    rows.push([g.titulo,t.n,t.id,t.corporativo,t.categoria,t.proceso,t.actividad,t.integraciones,t.microservicio,t.responsable,t.estado,t.inicio,t.duracion,t.fin,t.avance,t.dependiente,t.estado_prueba,t.owner_ku]);
+  }));
+  const csv = rows.map(r=>r.map(v=>{
+    v = v==null ? "" : String(v);
+    if(v.includes(",")||v.includes('"')||v.includes("\n")) v = '"'+v.replace(/"/g,'""')+'"';
+    return v;
+  }).join(",")).join("\n");
+  const blob = new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "cronograma_gantt_ti_hana.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast("CSV exportado");
+}
+
+function exportXLSX(){
+  if(!connected){ toast("Sin conexión al servidor: no se puede exportar Excel"); return; }
+  const a = document.createElement("a");
+  a.href = "/api/export.xlsx";
+  a.download = "cronograma-gantt-ti.xlsx";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast("Excel exportado");
+}
+
+function exportDOCX(){
+  if(!connected){ toast("Sin conexión al servidor: no se puede exportar Word"); return; }
+  const a = document.createElement("a");
+  a.href = "/api/export.docx";
+  a.download = "cronograma-gantt-ti.docx";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast("Word exportado");
+}
+
+/* ══════════════ EXPORT PDF (captura del Gantt filtrado) ══════════════ */
+const pdfLibCache = {};
+function loadScriptOnce(src){
+  if(!pdfLibCache[src]){
+    pdfLibCache[src] = new Promise((resolve, reject)=>{
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = ()=>{ delete pdfLibCache[src]; reject(new Error("No se pudo cargar "+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  return pdfLibCache[src];
+}
+
+function pdfFileName(){
+  const parts = ["cronograma_gantt"];
+  if(filters.categorias.size) parts.push([...filters.categorias].join("+"));
+  if(filters.responsable) parts.push(filters.responsable);
+  if(filters.estado) parts.push(filters.estado);
+  if(filters.estado_prueba) parts.push(filters.estado_prueba);
+  if(filters.dependiente) parts.push(filters.dependiente);
+  if(filters.search) parts.push(filters.search);
+  const clean = parts.join("_")
+    .normalize("NFD").replace(/[̀-ͯ]/g,"")
+    .replace(/[^\w+.-]+/g,"-").replace(/-{2,}/g,"-");
+  return clean.slice(0,120) + ".pdf";
+}
+
+async function exportPDF(){
+  const btn = document.getElementById("btn-export-pdf");
+  const scrollEl = document.getElementById("gantt-scroll");
+  const wrapEl = document.getElementById("gantt-wrap");
+  const inner = document.getElementById("gantt-inner");
+  const hdrEl = document.getElementById("header-row");
+  const prevLbl = btn.textContent;
+  const prevScroll = { left: scrollEl.scrollLeft, top: scrollEl.scrollTop };
+  btn.disabled = true; btn.textContent = "Generando PDF…";
+  try{
+    await Promise.all([
+      loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"),
+      loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"),
+    ]);
+    // Se muta el DOM real para que la captura sea exactamente lo que se ve (sin depender del
+    // clon de onclone); al final renderGantt() reconstruye todo desde DATA y restaura la vista.
+    scrollEl.scrollLeft = 0; scrollEl.scrollTop = 0;
+    scrollEl.style.maxHeight = "none"; scrollEl.style.overflow = "visible";
+    wrapEl.style.overflow = "visible";
+    // En el PDF se omiten Responsable (128px), botones de acción (64px) y Microservicio (300px)
+    const PDF_HIDDEN_W = 128 + 64 + 300;
+    document.querySelectorAll("#gantt-inner .col-resp, #gantt-inner .col-actions, #gantt-inner .grp-del, #gantt-inner .col-microservicio").forEach(el=>el.remove());
+    document.documentElement.style.setProperty("--sticky-w", (1706 - PDF_HIDDEN_W)+"px");
+    // Se neutraliza el sticky: sus offsets "left" ya no corresponden tras quitar columnas
+    document.querySelectorAll("#gantt-inner .meta-cell, #gantt-inner .grp-sticky, #gantt-inner #header-row").forEach(el=>{
+      el.style.position = "relative"; el.style.left = "auto"; el.style.top = "auto";
+    });
+    // El PDF no incluye el calendario: se quitan cabecera de meses/días, áreas de barras y barra de sección
+    document.querySelectorAll("#gantt-inner .hdr-days, #gantt-inner .timeline-area, #gantt-inner .grp-bar").forEach(el=>el.remove());
+    // El borde grueso que separaba las columnas fijas del timeline pasa a Owner - KU (última columna visible)
+    document.querySelectorAll("#gantt-inner .col-owner-ku").forEach(el=>{ el.style.borderRight = "2px solid #E2DFDC"; });
+    // Los <select> salen borrosos en la captura: se reemplazan por texto plano nítido
+    document.querySelectorAll("#gantt-inner select").forEach(sel=>{
+      const opt = sel.selectedOptions[0];
+      const span = document.createElement("span");
+      span.textContent = opt ? opt.textContent : "";
+      span.style.cssText = "font-size:10.5px;font-weight:600;color:#0F0F10;padding:0 .4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
+      sel.replaceWith(span);
+    });
+    // Estado de desarrollo, Dependiente y Owner - KU se centran solo en el PDF
+    document.querySelectorAll("#gantt-inner .task-row .col-estado, #gantt-inner .task-row .col-dependiente, #gantt-inner .task-row .col-owner-ku").forEach(el=>{
+      el.style.justifyContent = "center"; el.style.textAlign = "center";
+    });
+    // Solo la tabla de columnas fijas (sin calendario): las filas conservan su ancho inline y se recorta el resto
+    const fullW = 1706 - PDF_HIDDEN_W;
+    // Cabecera del PDF: título, fechas de proyecto, KPIs y filtros aplicados (mismos campos del tablero)
+    const txt = id => { const el = document.getElementById(id); return el ? el.textContent : ""; };
+    const kpiCard = (ey, val, lbl, amber) => `
+      <div style="flex:1;background:#fff;border-radius:6px;padding:12px 16px;box-shadow:0 1px 3px rgba(0,0,0,.08);${amber?"border-top:3px solid #FAB701;":""}">
+        <div style="font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:#7A7B7E;font-weight:700;">${esc(ey)}</div>
+        <div style="font-size:28px;font-weight:800;color:${amber?"#8a6000":"#0F0F10"};margin-top:5px;line-height:1;">${esc(val)}</div>
+        <div style="font-size:11px;color:#3D3E40;margin-top:5px;">${esc(lbl)}</div>
+      </div>`;
+    const filtrosTxt = [];
+    if(filters.categorias.size) filtrosTxt.push("Categorías: " + [...filters.categorias].join(", "));
+    if(filters.responsable) filtrosTxt.push("Responsable: " + filters.responsable);
+    if(filters.estado) filtrosTxt.push("Estado: " + filters.estado);
+    if(filters.estado_prueba) filtrosTxt.push("Estado de prueba: " + filters.estado_prueba);
+    if(filters.dependiente) filtrosTxt.push("Dependiente: " + filters.dependiente);
+    if(filters.search) filtrosTxt.push("Búsqueda: “" + filters.search + "”");
+    const hdrPdf = document.createElement("div");
+    hdrPdf.id = "pdf-header";
+    hdrPdf.style.cssText = `width:${fullW}px;background:#F5F2EF;padding-bottom:16px;`;
+    hdrPdf.innerHTML = `
+      <div style="background:#F02615;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;opacity:.92;">Área TI · Integraciones</div>
+          <div style="font-size:23px;font-weight:800;letter-spacing:-.01em;margin-top:4px;">Cronograma Gantt — Migración a SAP HANA</div>
+        </div>
+        <div style="display:flex;gap:32px;text-align:right;">
+          <div>
+            <div style="font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;font-weight:600;opacity:.88;">Inicio de proyecto</div>
+            <div style="font-size:16px;font-weight:700;margin-top:3px;">${esc(txt("stat-inicio"))}</div>
+          </div>
+          <div>
+            <div style="font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;font-weight:600;opacity:.88;">Fin estimado</div>
+            <div style="font-size:16px;font-weight:700;margin-top:3px;">${esc(txt("stat-fin"))}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;padding:16px 24px 0;">
+        ${kpiCard("Total actividades", txt("kpi-total"), "En " + txt("kpi-secciones") + " secciones del proyecto")}
+        ${kpiCard("Completadas", txt("kpi-done"), txt("kpi-done-pct"))}
+        ${kpiCard("En curso", txt("kpi-progress"), "Actividades activas hoy")}
+        ${kpiCard("Bloqueadas / en riesgo", txt("kpi-blocked"), "Requieren atención")}
+        ${kpiCard("Avance promedio", txt("kpi-avg"), "Ponderado sobre el total de actividades", true)}
+      </div>
+      ${filtrosTxt.length ? `<div style="padding:12px 24px 0;font-size:12.5px;color:#3D3E40;font-weight:600;">Filtros aplicados — ${esc(filtrosTxt.join(" · "))}</div>` : ""}
+    `;
+    inner.insertBefore(hdrPdf, inner.firstChild);
+    // Esperar fuentes y layout estables: capturar antes de tiempo pinta mal los fondos del encabezado
+    await document.fonts.ready;
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const fullH = inner.scrollHeight;
+    const scale = Math.max(.5, Math.min(2, 12000/fullW, 12000/fullH));
+    const canvas = await html2canvas(inner, {
+      scale, backgroundColor:"#ffffff",
+      width: fullW, height: fullH, windowWidth: fullW + PDF_HIDDEN_W,
+    });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: canvas.width >= canvas.height ? "landscape" : "portrait",
+      unit: "px", format: [canvas.width, canvas.height], hotfixes: ["px_scaling"],
+    });
+    // JPEG alta calidad: mismo resultado visual que PNG pero con un PDF mucho más liviano
+    pdf.addImage(canvas.toDataURL("image/jpeg", .92), "JPEG", 0, 0, canvas.width, canvas.height);
+    pdf.save(pdfFileName());
+    toast("PDF exportado");
+  }catch(err){
+    console.error(err);
+    toast("No se pudo generar el PDF (¿hay conexión a internet?)");
+  }finally{
+    // Restaurar la vista: quitar cabecera del PDF, estilos de contenedores + reconstrucción desde DATA
+    const ph = document.getElementById("pdf-header");
+    if(ph) ph.remove();
+    scrollEl.style.maxHeight = ""; scrollEl.style.overflow = "";
+    wrapEl.style.overflow = "";
+    hdrEl.style.position = ""; hdrEl.style.left = ""; hdrEl.style.top = "";
+    document.documentElement.style.removeProperty("--sticky-w");
+    renderGantt();
+    scrollEl.scrollLeft = prevScroll.left; scrollEl.scrollTop = prevScroll.top;
+    btn.disabled = false; btn.textContent = prevLbl;
+  }
+}
+
+/* ══════════════ EVENTOS ══════════════ */
+document.getElementById("search").addEventListener("input", (e)=>{ filters.search = e.target.value; renderGantt(); });
+document.getElementById("filter-resp").addEventListener("change", (e)=>{ filters.responsable = e.target.value; renderGantt(); });
+document.getElementById("filter-estado").addEventListener("change", (e)=>{ filters.estado = e.target.value; renderGantt(); });
+document.getElementById("filter-estado-prueba").addEventListener("change", (e)=>{ filters.estado_prueba = e.target.value; renderGantt(); });
+document.getElementById("filter-dependiente").addEventListener("change", (e)=>{ filters.dependiente = e.target.value; renderGantt(); });
+document.getElementById("zoom-in").addEventListener("click", ()=>{ dayWidth = Math.min(60, dayWidth+8); updateZoomLbl(); renderGantt(); });
+document.getElementById("zoom-out").addEventListener("click", ()=>{ dayWidth = Math.max(14, dayWidth-8); updateZoomLbl(); renderGantt(); });
+function updateZoomLbl(){ document.getElementById("zoom-lbl").textContent = dayWidth>=40?"Amplio":dayWidth>=26?"Día":"Compacto"; }
+
+document.getElementById("btn-today").addEventListener("click", scrollToToday);
+document.getElementById("btn-expand").addEventListener("click", ()=>{ collapsedGroups.clear(); renderGantt(); });
+document.getElementById("btn-collapse").addEventListener("click", ()=>{ DATA.forEach(g=>collapsedGroups.add(g.uid)); renderGantt(); });
+document.getElementById("btn-export").addEventListener("click", exportCSV);
+document.getElementById("btn-export-xlsx").addEventListener("click", exportXLSX);
+document.getElementById("btn-export-docx").addEventListener("click", exportDOCX);
+document.getElementById("btn-export-pdf").addEventListener("click", exportPDF);
+document.getElementById("btn-reset").addEventListener("click", async ()=>{
+  if(confirm("Esto restablecerá el cronograma en la base de datos a los datos originales del Excel, perdiendo tus cambios. ¿Continuar?")){
+    try{
+      await apiPost("/api/reset", {});
+      collapsedGroups.clear();
+      await loadDataFromServer();
+      toast("Datos restablecidos");
+    }catch(err){ toast("No se pudo restablecer (¿servidor activo?)"); }
+  }
+});
+document.getElementById("btn-add-task").addEventListener("click", ()=>openModal(DATA[0] && DATA[0].uid, null));
+document.getElementById("btn-help").addEventListener("click", ()=>{
+  alert("Cronograma Gantt editable (con base de datos SQLite)\n\n• Haz clic en una barra o en el lápiz de una fila para editar una actividad.\n• Usa \"+ Nueva actividad\" para agregar tareas.\n• Los títulos de sección son editables directamente (haz clic sobre el texto).\n• Cada cambio se guarda de inmediato en la base de datos SQLite del servidor (cronograma.sqlite).\n• Si ves \"Sin conexión con el servidor\", asegúrate de tener corriendo 'python server.py'.\n• Usa \"Restablecer\" para volver a los datos originales del Excel.\n• \"Exportar CSV\" descarga el cronograma actual en formato tabla.");
+});
+
+document.getElementById("modal-close").addEventListener("click", closeModal);
+document.getElementById("btn-cancel").addEventListener("click", closeModal);
+document.getElementById("modal-overlay").addEventListener("click", (e)=>{ if(e.target.id==="modal-overlay") closeModal(); });
+document.getElementById("btn-save-task").addEventListener("click", saveTaskFromForm);
+document.getElementById("btn-delete-task").addEventListener("click", ()=>{
+  if(confirm("¿Eliminar esta actividad?")) deleteEditingTask();
+});
+document.getElementById("f-inicio").addEventListener("change", updateFechaFin);
+document.getElementById("f-duracion").addEventListener("input", updateFechaFin);
+document.getElementById("f-avance").addEventListener("input", (e)=>{ document.getElementById("f-avance-lbl").textContent = e.target.value+"%"; });
+document.getElementById("btn-retry-conn").addEventListener("click", loadDataFromServer);
+
+/* ══════════════ LOGIN ══════════════ */
+const SESSION_KEY = "gantt_ti_usuario";
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+function initLogin(){
+  const screen = document.getElementById("login-screen");
+  document.getElementById("btn-logout").addEventListener("click", ()=>{
+    if(confirm("¿Cerrar sesión?")) logout();
+  });
+  if(sessionStorage.getItem(SESSION_KEY)){ screen.classList.add("hidden"); return; }
+  document.getElementById("login-form").addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const errEl = document.getElementById("login-error");
+    const btn = document.getElementById("login-btn");
+    errEl.classList.remove("show");
+    btn.disabled = true; btn.textContent = "Verificando…";
+    try{
+      const res = await fetch("/api/login", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          usuario: document.getElementById("login-user").value.trim(),
+          password: document.getElementById("login-pass").value,
+        }),
+      });
+      if(res.ok){
+        const data = await res.json();
+        sessionStorage.setItem(SESSION_KEY, data.usuario || "");
+        screen.classList.add("hidden");
+      }else{
+        errEl.textContent = "Usuario o contraseña incorrectos";
+        errEl.classList.add("show");
+        document.getElementById("login-pass").value = "";
+        document.getElementById("login-pass").focus();
+      }
+    }catch(err){
+      errEl.textContent = "No se pudo conectar con el servidor (ejecuta 'python server.py')";
+      errEl.classList.add("show");
+    }finally{
+      btn.disabled = false; btn.textContent = "Ingresar";
+    }
+  });
+}
+
+/* ══════════════ INIT ══════════════ */
+initLogin();
+renderFilterChips();
+updateZoomLbl();
+loadDataFromServer();
+setInterval(()=>{ if(!connected) loadDataFromServer(); }, 4000);
+
+</script>
+</body>
+</html>
