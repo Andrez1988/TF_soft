@@ -21,7 +21,7 @@
   --day-w:34px;
 }
 html,body{background:var(--off);font-family:var(--f);color:var(--g1);}
-body{min-height:100vh;display:flex;flex-direction:column;}
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 button{font-family:var(--f);cursor:pointer;}
 input,select{font-family:var(--f);}
 
@@ -42,8 +42,6 @@ input,select{font-family:var(--f);}
 .tb-stat-val{font-size:13.5px;font-weight:700;color:#fff;}
 .btn-ghost-light{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-weight:700;font-size:12px;}
 .btn-ghost-light:hover{background:rgba(255,255,255,.15);}
-.btn-logout{border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:100px;padding:.42rem .95rem;font-size:11.5px;font-weight:700;white-space:nowrap;}
-.btn-logout:hover{background:#fff;color:var(--red);}
 
 /* ── KPI ROW ── */
 #kpi-row{padding:1rem 1.75rem 0;}
@@ -98,11 +96,12 @@ select{
 .file-status.warn:hover{filter:brightness(.96);}
 
 /* ── GANTT ── */
-#gantt-wrap{margin:1rem 1.75rem 1.75rem;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;flex:1;display:flex;}
-#gantt-scroll{overflow:auto;width:100%;max-height:calc(100vh - 260px);}
+#gantt-wrap{margin:1rem 1.75rem 1.75rem;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;flex:1;display:flex;flex-direction:column;}
+#header-scroll{overflow:hidden;flex-shrink:0;}
+#gantt-scroll{overflow:auto;flex:1;min-width:0;margin-bottom:16px;margin-right:16px;}
 #gantt-inner{position:relative;}
 
-.meta-cell{position:sticky;background:#fff;display:flex;align-items:center;padding:0 .5rem;font-size:11.5px;border-right:1px solid var(--g3);overflow:hidden;z-index:10;}
+.meta-cell{position:sticky;background:#fff;display:flex;align-items:center;padding:0 .5rem;font-size:11.5px;border-right:1px solid var(--g3);overflow:hidden;}
 .col-n{width:38px;left:0;justify-content:center;color:var(--g2);font-weight:700;}
 .col-act{width:300px;left:38px;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;padding:.35rem .6rem;}
 .col-resp{width:128px;left:338px;gap:.4rem;}
@@ -117,8 +116,8 @@ select{
 .col-actions{width:64px;left:1642px;justify-content:center;gap:.3rem;border-right:2px solid var(--g3);}
 :root{--sticky-w:1706px;}
 
-#header-row{display:flex;position:sticky;top:0;z-index:30;background:var(--white);border-bottom:2px solid var(--g3);height:52px;}
-.hdr-meta{display:flex;height:52px;position:sticky;left:0;z-index:32;}
+#header-row{display:flex;background:var(--white);border-bottom:2px solid var(--g3);height:52px;}
+.hdr-meta{display:contents;}
 .hdr-meta .meta-cell{height:52px;z-index:31;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--g2);font-weight:700;background:var(--off);justify-content:center;text-align:center;}
 .hdr-days{display:flex;flex-direction:column;}
 .hdr-months{display:flex;height:20px;}
@@ -224,31 +223,6 @@ select{
   #toolbar,.tbar-actions,.row-actions,#page-footer,.grp-del{display:none!important;}
 }
 
-/* ── LOGIN ── */
-#login-screen{position:fixed;inset:0;z-index:900;display:flex;background:#fff;}
-#login-screen.hidden{display:none;}
-.login-left{flex:1 1 50%;background:var(--red);color:#fff;display:flex;flex-direction:column;padding:1.6rem 1.9rem;}
-.login-logo{height:38px;width:auto;align-self:flex-start;filter:drop-shadow(0 1px 3px rgba(0,0,0,.18));flex-shrink:0;}
-.login-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1rem;padding:2rem;}
-.login-hello{font-size:13.5px;font-weight:700;}
-.login-brand{font-size:clamp(2.2rem,4.5vw,3.6rem);font-weight:300;letter-spacing:.2em;margin-left:.2em;line-height:1.1;}
-.login-sub{font-size:12px;color:rgba(255,255,255,.92);}
-.login-right{flex:1 1 50%;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff;}
-.login-box{width:min(360px,100%);display:flex;flex-direction:column;}
-.login-title{color:var(--red);font-size:1.65rem;font-weight:600;text-align:center;letter-spacing:-.01em;}
-.login-help{font-size:11.5px;color:var(--g2);text-align:center;margin:.9rem 0 2rem;line-height:1.6;}
-.login-field{margin-bottom:1.3rem;}
-.login-field label{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--g1);font-weight:600;margin-bottom:.45rem;}
-.login-field input{width:100%;border:none;background:#E8F0FE;padding:.85rem .9rem;font-size:13px;color:var(--ink-ti);border-radius:3px;}
-.login-field input:focus{outline:2px solid var(--red);outline-offset:-2px;background:#fff;}
-.login-terms{font-size:11px;color:var(--g1);margin:.2rem 0 1.8rem;}
-.login-error{display:none;background:#fde5e2;color:var(--red-dk);font-size:12px;font-weight:600;padding:.6rem .8rem;border-radius:5px;margin-bottom:1.1rem;text-align:center;}
-.login-error.show{display:block;}
-.login-btn{background:var(--red);color:#fff;border:none;border-radius:100px;padding:.85rem 1rem;font-size:14px;font-weight:700;}
-.login-btn:hover{background:var(--red-dk);}
-.login-btn:disabled{opacity:.6;cursor:wait;}
-@media (max-width:760px){ .login-left{display:none;} }
-
 #conn-error{position:fixed;inset:0;background:rgba(15,15,16,.72);z-index:800;display:none;align-items:center;justify-content:center;padding:1.5rem;}
 #conn-error.show{display:flex;}
 .conn-box{background:#fff;padding:2rem 2.2rem;border-radius:10px;max-width:480px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35);}
@@ -286,7 +260,6 @@ select{
       <span class="tb-stat-val" id="stat-fin">—</span>
     </div>
     <button class="btn btn-ghost-light" id="btn-help" title="Ayuda">?</button>
-    <button class="btn btn-logout" id="btn-logout" title="Cerrar sesión">Cerrar sesión</button>
   </div>
 </header>
 
@@ -351,44 +324,17 @@ select{
 </div>
 
 <main id="gantt-wrap">
+  <div id="header-scroll">
+    <div id="header-row"></div>
+  </div>
   <div id="gantt-scroll">
     <div id="gantt-inner">
-      <div id="header-row"></div>
       <div id="body-rows"></div>
     </div>
   </div>
 </main>
 
 <div id="toast"></div>
-
-<!-- LOGIN: pantalla de ingreso (credenciales en la tabla usuarios de SQLite) -->
-<div id="login-screen">
-  <div class="login-left">
-    <svg class="login-logo" viewBox="0 0 3268.34 1016.49" aria-label="Farmacias Peruanas"><use href="#fp-logo-w"/></svg>
-    <div class="login-hero">
-      <div class="login-hello">Bienvenido. Nos encanta verte de nuevo</div>
-      <div class="login-brand">CRONOGRAMA</div>
-      <div class="login-sub">Gestión del cronograma Gantt de integraciones · Migración SAP HANA</div>
-    </div>
-  </div>
-  <div class="login-right">
-    <form class="login-box" id="login-form" autocomplete="off">
-      <h2 class="login-title">Ingreso al sistema</h2>
-      <p class="login-help">Para continuar. Por favor digite sus credenciales asignadas o<br>póngase en contacto con el área encargada.</p>
-      <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
-      <div class="login-field">
-        <label for="login-user">Usuario</label>
-        <input type="text" id="login-user" autocomplete="username" required>
-      </div>
-      <div class="login-field">
-        <label for="login-pass">Contraseña</label>
-        <input type="password" id="login-pass" autocomplete="current-password" required>
-      </div>
-      <div class="login-terms">Al ingresar acepta los términos y condiciones</div>
-      <button type="submit" class="login-btn" id="login-btn">Ingresar</button>
-    </form>
-  </div>
-</div>
 
 <!-- OVERLAY: error de conexión con el servidor local -->
 <div id="conn-error">
@@ -1272,12 +1218,13 @@ async function exportPDF(){
     ]);
     // Se muta el DOM real para que la captura sea exactamente lo que se ve (sin depender del
     // clon de onclone); al final renderGantt() reconstruye todo desde DATA y restaura la vista.
+    inner.insertBefore(hdrEl, inner.firstChild); // header-row vive fuera de gantt-inner; se reubica para la captura
     scrollEl.scrollLeft = 0; scrollEl.scrollTop = 0;
     scrollEl.style.maxHeight = "none"; scrollEl.style.overflow = "visible";
     wrapEl.style.overflow = "visible";
-    // En el PDF se omiten Responsable (128px), botones de acción (64px) y Microservicio (300px)
-    const PDF_HIDDEN_W = 128 + 64 + 300;
-    document.querySelectorAll("#gantt-inner .col-resp, #gantt-inner .col-actions, #gantt-inner .grp-del, #gantt-inner .col-microservicio").forEach(el=>el.remove());
+    // En el PDF se omiten Responsable (128px), botones de acción (64px), Microservicio (300px) y Owner - KU (160px)
+    const PDF_HIDDEN_W = 128 + 64 + 300 + 160;
+    document.querySelectorAll("#gantt-inner .col-resp, #gantt-inner .col-actions, #gantt-inner .grp-del, #gantt-inner .col-microservicio, #gantt-inner .col-owner-ku").forEach(el=>el.remove());
     document.documentElement.style.setProperty("--sticky-w", (1706 - PDF_HIDDEN_W)+"px");
     // Se neutraliza el sticky: sus offsets "left" ya no corresponden tras quitar columnas
     document.querySelectorAll("#gantt-inner .meta-cell, #gantt-inner .grp-sticky, #gantt-inner #header-row").forEach(el=>{
@@ -1285,8 +1232,8 @@ async function exportPDF(){
     });
     // El PDF no incluye el calendario: se quitan cabecera de meses/días, áreas de barras y barra de sección
     document.querySelectorAll("#gantt-inner .hdr-days, #gantt-inner .timeline-area, #gantt-inner .grp-bar").forEach(el=>el.remove());
-    // El borde grueso que separaba las columnas fijas del timeline pasa a Owner - KU (última columna visible)
-    document.querySelectorAll("#gantt-inner .col-owner-ku").forEach(el=>{ el.style.borderRight = "2px solid #E2DFDC"; });
+    // El borde grueso que separaba las columnas fijas del timeline pasa a Dependiente (última columna visible)
+    document.querySelectorAll("#gantt-inner .col-dependiente").forEach(el=>{ el.style.borderRight = "2px solid #E2DFDC"; });
     // Los <select> salen borrosos en la captura: se reemplazan por texto plano nítido
     document.querySelectorAll("#gantt-inner select").forEach(sel=>{
       const opt = sel.selectedOptions[0];
@@ -1294,10 +1241,6 @@ async function exportPDF(){
       span.textContent = opt ? opt.textContent : "";
       span.style.cssText = "font-size:10.5px;font-weight:600;color:#0F0F10;padding:0 .4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
       sel.replaceWith(span);
-    });
-    // Estado de desarrollo, Dependiente y Owner - KU se centran solo en el PDF
-    document.querySelectorAll("#gantt-inner .task-row .col-estado, #gantt-inner .task-row .col-dependiente, #gantt-inner .task-row .col-owner-ku").forEach(el=>{
-      el.style.justifyContent = "center"; el.style.textAlign = "center";
     });
     // Solo la tabla de columnas fijas (sin calendario): las filas conservan su ancho inline y se recorta el resto
     const fullW = 1706 - PDF_HIDDEN_W;
@@ -1374,9 +1317,11 @@ async function exportPDF(){
     scrollEl.style.maxHeight = ""; scrollEl.style.overflow = "";
     wrapEl.style.overflow = "";
     hdrEl.style.position = ""; hdrEl.style.left = ""; hdrEl.style.top = "";
+    document.getElementById("header-scroll").appendChild(hdrEl); // restaurar header-row a su contenedor estático
     document.documentElement.style.removeProperty("--sticky-w");
     renderGantt();
     scrollEl.scrollLeft = prevScroll.left; scrollEl.scrollTop = prevScroll.top;
+    document.getElementById("header-scroll").scrollLeft = prevScroll.left;
     btn.disabled = false; btn.textContent = prevLbl;
   }
 }
@@ -1424,54 +1369,11 @@ document.getElementById("f-inicio").addEventListener("change", updateFechaFin);
 document.getElementById("f-duracion").addEventListener("input", updateFechaFin);
 document.getElementById("f-avance").addEventListener("input", (e)=>{ document.getElementById("f-avance-lbl").textContent = e.target.value+"%"; });
 document.getElementById("btn-retry-conn").addEventListener("click", loadDataFromServer);
-
-/* ══════════════ LOGIN ══════════════ */
-const SESSION_KEY = "gantt_ti_usuario";
-function logout(){
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
-function initLogin(){
-  const screen = document.getElementById("login-screen");
-  document.getElementById("btn-logout").addEventListener("click", ()=>{
-    if(confirm("¿Cerrar sesión?")) logout();
-  });
-  if(sessionStorage.getItem(SESSION_KEY)){ screen.classList.add("hidden"); return; }
-  document.getElementById("login-form").addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    const errEl = document.getElementById("login-error");
-    const btn = document.getElementById("login-btn");
-    errEl.classList.remove("show");
-    btn.disabled = true; btn.textContent = "Verificando…";
-    try{
-      const res = await fetch("/api/login", {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          usuario: document.getElementById("login-user").value.trim(),
-          password: document.getElementById("login-pass").value,
-        }),
-      });
-      if(res.ok){
-        const data = await res.json();
-        sessionStorage.setItem(SESSION_KEY, data.usuario || "");
-        screen.classList.add("hidden");
-      }else{
-        errEl.textContent = "Usuario o contraseña incorrectos";
-        errEl.classList.add("show");
-        document.getElementById("login-pass").value = "";
-        document.getElementById("login-pass").focus();
-      }
-    }catch(err){
-      errEl.textContent = "No se pudo conectar con el servidor (ejecuta 'python server.py')";
-      errEl.classList.add("show");
-    }finally{
-      btn.disabled = false; btn.textContent = "Ingresar";
-    }
-  });
-}
+document.getElementById("gantt-scroll").addEventListener("scroll", (e)=>{
+  document.getElementById("header-scroll").scrollLeft = e.target.scrollLeft;
+});
 
 /* ══════════════ INIT ══════════════ */
-initLogin();
 renderFilterChips();
 updateZoomLbl();
 loadDataFromServer();
