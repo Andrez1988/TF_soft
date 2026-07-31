@@ -812,6 +812,7 @@ function renderBody(range){
       const est = estadoMeta(t.estado);
       const estP = estadoPruebaMeta(t.estado_prueba);
       const avance = Number(t.avance)||0;
+      const isBlocked = t.estado === "Bloqueado";
 
       row.innerHTML = `
         <div class="meta-cell col-n">${t.n ?? ""}</div>
@@ -841,11 +842,11 @@ function renderBody(range){
         </div>
         <div class="meta-cell col-estado"><span class="estado-badge" style="color:${est.color};background:${est.bg}">${esc(t.estado)}</span></div>
         <div class="meta-cell col-dependiente">
-          <select class="dependiente-select">${dependienteOptionsHTML(t.dependiente)}</select>
+          <select class="dependiente-select" ${isBlocked ? "disabled title=\"Actividad bloqueada: no editable\"" : ""}>${dependienteOptionsHTML(t.dependiente)}</select>
         </div>
         <div class="meta-cell col-estado-prueba"><span class="estado-badge" style="color:${estP.color};background:${estP.bg}">${esc(t.estado_prueba || "No iniciado")}</span></div>
         <div class="meta-cell col-owner-ku">
-          <select class="owner-select">${ownerOptionsHTML(t.owner_ku, true)}</select>
+          <select class="owner-select" ${isBlocked ? "disabled title=\"Actividad bloqueada: no editable\"" : ""}>${ownerOptionsHTML(t.owner_ku, true)}</select>
         </div>
         <div class="meta-cell col-actions row-actions">
           <button class="icon-btn edit" title="Editar">✏️</button>
@@ -897,6 +898,7 @@ function renderBody(range){
 
       row.querySelector(".edit").addEventListener("click", ()=>openModal(group.uid, t.uid));
       row.querySelector(".del").addEventListener("click", async ()=>{
+        if(isBlocked){ toast("No se puede eliminar: la actividad está bloqueada"); return; }
         if(confirm(`¿Eliminar la actividad "${t.actividad}"?`)){
           try{
             await apiDelete(`/api/tasks/${t.uid}`);
@@ -1012,8 +1014,6 @@ function openModal(gUid, tUid){
   populateSelects();
   const overlay = document.getElementById("modal-overlay");
   const isNew = !tUid;
-  document.getElementById("modal-title").textContent = isNew ? "Nueva actividad" : "Editar actividad";
-  document.getElementById("btn-delete-task").style.display = isNew ? "none" : "inline-flex";
   editingUid = isNew ? {gUid: gUid || (DATA[0] && DATA[0].uid), tUid:null} : {gUid, tUid};
 
   let t = {actividad:"",id:"",corporativo:"",categoria:Object.keys(CATEGORIAS)[0],proceso:"",integraciones:"",microservicio:"",responsable:"",estado:"No iniciado",estado_prueba:"No iniciado",inicio:fmtD(new Date()),duracion:1,fin:"",avance:0,dependiente:"",owner_ku:""};
@@ -1022,6 +1022,12 @@ function openModal(gUid, tUid){
     const found = g && g.tasks.find(x=>x.uid===tUid);
     if(found) t = found;
   }
+
+  const isBlocked = !isNew && t.estado === "Bloqueado";
+  document.getElementById("modal-title").textContent = isNew ? "Nueva actividad" : (isBlocked ? "Actividad bloqueada (edición limitada)" : "Editar actividad");
+  document.getElementById("btn-delete-task").style.display = (isNew || isBlocked) ? "none" : "inline-flex";
+  document.getElementById("btn-save-task").style.display = "inline-flex";
+  document.querySelectorAll(".modal-body input, .modal-body select").forEach(el=>{ el.disabled = isBlocked && el.id !== "f-estado"; });
 
   document.getElementById("f-seccion").value = gUid || (DATA[0] && DATA[0].uid) || "";
   document.getElementById("f-categoria").value = t.categoria || Object.keys(CATEGORIAS)[0];
