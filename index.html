@@ -1224,16 +1224,37 @@ async function exportPDF(){
     wrapEl.style.overflow = "visible";
     // En el PDF se omiten Responsable (128px), botones de acción (64px), Microservicio (300px) y Owner - KU (160px)
     const PDF_HIDDEN_W = 128 + 64 + 300 + 160;
+    const fullW = 1706 - PDF_HIDDEN_W;
     document.querySelectorAll("#gantt-inner .col-resp, #gantt-inner .col-actions, #gantt-inner .grp-del, #gantt-inner .col-microservicio, #gantt-inner .col-owner-ku").forEach(el=>el.remove());
-    document.documentElement.style.setProperty("--sticky-w", (1706 - PDF_HIDDEN_W)+"px");
+    document.documentElement.style.setProperty("--sticky-w", fullW+"px");
     // Se neutraliza el sticky: sus offsets "left" ya no corresponden tras quitar columnas
     document.querySelectorAll("#gantt-inner .meta-cell, #gantt-inner .grp-sticky, #gantt-inner #header-row").forEach(el=>{
       el.style.position = "relative"; el.style.left = "auto"; el.style.top = "auto";
     });
     // El PDF no incluye el calendario: se quitan cabecera de meses/días, áreas de barras y barra de sección
     document.querySelectorAll("#gantt-inner .hdr-days, #gantt-inner .timeline-area, #gantt-inner .grp-bar").forEach(el=>el.remove());
+    // header-row/task-row son flex de ancho "auto" que se estiran al disponible del contenedor
+    // en vez de encogerse a sus hijos; sin esto quedan mucho más anchos que su contenido real y
+    // html2canvas termina comprimiendo/solapando el texto de las cabeceras al capturar solo fullW.
+    inner.style.width = fullW+"px";
+    document.querySelectorAll("#gantt-inner #header-row, #gantt-inner .task-row").forEach(el=>{ el.style.width = fullW+"px"; });
     // El borde grueso que separaba las columnas fijas del timeline pasa a Dependiente (última columna visible)
     document.querySelectorAll("#gantt-inner .col-dependiente").forEach(el=>{ el.style.borderRight = "2px solid #E2DFDC"; });
+    // html2canvas no soporta bien texto centrado en celdas flex: con flex-direction:column colapsa
+    // el texto en una columna de un carácter, y el salto de línea de los títulos en dos renglones
+    // (Estado de<br>desarrollo/prueba) se solapa sin un line-height explícito. Se neutraliza el
+    // flex para el texto (fila + letter-spacing normal) y los títulos de dos líneas se envuelven en
+    // un span de bloque con su propio line-height para que apilen sin solaparse.
+    document.querySelectorAll("#header-row .meta-cell").forEach(el=>{
+      el.style.flexDirection = "row";
+      el.style.letterSpacing = "normal";
+      if(el.innerHTML.includes("<br>")){
+        el.innerHTML = `<span style="display:inline-block;line-height:1.35;text-align:center;">${el.innerHTML}</span>`;
+      } else {
+        el.style.lineHeight = "1.3";
+        el.style.whiteSpace = "normal";
+      }
+    });
     // Los <select> salen borrosos en la captura: se reemplazan por texto plano nítido
     document.querySelectorAll("#gantt-inner select").forEach(sel=>{
       const opt = sel.selectedOptions[0];
@@ -1243,7 +1264,6 @@ async function exportPDF(){
       sel.replaceWith(span);
     });
     // Solo la tabla de columnas fijas (sin calendario): las filas conservan su ancho inline y se recorta el resto
-    const fullW = 1706 - PDF_HIDDEN_W;
     // Cabecera del PDF: título, fechas de proyecto, KPIs y filtros aplicados (mismos campos del tablero)
     const txt = id => { const el = document.getElementById(id); return el ? el.textContent : ""; };
     const kpiCard = (ey, val, lbl, amber) => `
@@ -1316,7 +1336,8 @@ async function exportPDF(){
     if(ph) ph.remove();
     scrollEl.style.maxHeight = ""; scrollEl.style.overflow = "";
     wrapEl.style.overflow = "";
-    hdrEl.style.position = ""; hdrEl.style.left = ""; hdrEl.style.top = "";
+    inner.style.width = "";
+    hdrEl.style.position = ""; hdrEl.style.left = ""; hdrEl.style.top = ""; hdrEl.style.width = "";
     document.getElementById("header-scroll").appendChild(hdrEl); // restaurar header-row a su contenedor estático
     document.documentElement.style.removeProperty("--sticky-w");
     renderGantt();
